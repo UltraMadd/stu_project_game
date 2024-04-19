@@ -14,7 +14,7 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         self.down_pressed = False
         self.left_pressed = False
         self.right_pressed = False
-        self.speed = 128
+        self.speed = 4
         self.tiled_map = None
         self.physics_engine = None
         self.camera = None
@@ -60,27 +60,27 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
     def on_update(self, delta_time):
         """ Логика """
 
-        self.player_sprite.center_x += self.player_sprite.change_x * delta_time * self.speed
-        self.player_sprite.center_y += self.player_sprite.change_y * delta_time * self.speed
+        self.process_keychange()
+        self.physics_engine.update()
         self.center_camera_to_player()
 
     def process_keychange(self):
         """ Обработка нажатия клавиш """
 
         if self.up_pressed and not self.down_pressed:
-            self.player_sprite.change_y = 1
+            self.player_sprite.change_y = self.speed
         elif self.down_pressed and not self.up_pressed:
-            self.player_sprite.change_y = -1
+            self.player_sprite.change_y = -self.speed
         else:
             self.player_sprite.change_y = 0
 
         if self.left_pressed and not self.right_pressed:
-            self.player_sprite.change_x = -1
+            self.player_sprite.change_x = -self.speed
         elif self.right_pressed and not self.left_pressed:
-            self.player_sprite.change_x = 1
+            self.player_sprite.change_x = self.speed
         else:
             self.player_sprite.change_x = 0
-        total_velocity = abs(self.player_sprite.change_x) + abs(self.player_sprite.change_y)
+        total_velocity = (abs(self.player_sprite.change_x) + abs(self.player_sprite.change_y))//2
         if total_velocity != 0:
             self.player_sprite.change_x /= total_velocity
             self.player_sprite.change_y /= total_velocity
@@ -96,8 +96,6 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
             self.left_pressed = True
         elif symbol == arcade.key.D:
             self.right_pressed = True
-        
-        self.process_keychange()
 
     def on_key_release(self, symbol: int, modifiers: int):
         """ Отпускание клавиш """
@@ -111,7 +109,6 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         elif symbol == arcade.key.D:
             self.right_pressed = False
 
-        self.process_keychange()
 
 class GameWindow(arcade.Window):
     """ Класс окна """
