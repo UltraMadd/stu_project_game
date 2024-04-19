@@ -5,7 +5,6 @@ import numpy as np
 
 from views.game_view import GameView
 
-<<<<<<< HEAD
 class GameView(arcade.View):  # TODO player logic in arcade.Character
     def __init__(self):
         super().__init__()
@@ -113,9 +112,6 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
             self.right_pressed = False
 
         self.process_keychange()
-=======
->>>>>>> main
-
 
 class GameWindow(arcade.Window):
     """ Класс окна """
