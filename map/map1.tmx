@@ -1,13 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="1">
- <tileset firstgid="1" source="D:/New Folder/Tilemap_Flat.tsx"/>
- <tileset firstgid="41" source="D:/New Folder/Water.tsx"/>
- <tileset firstgid="42" source="D:/New Folder/Rocks_02.tsx"/>
- <tileset firstgid="74" source="D:/New Folder/Rocks_03.tsx"/>
- <tileset firstgid="106" source="D:/New Folder/Rocks_04.tsx"/>
- <tileset firstgid="138" source="D:/New Folder/Tilemap_Elevation.tsx"/>
- <tileset firstgid="170" source="Tiny Swords (Update 010)/Deco/Tree.tsx"/>
- <tileset firstgid="278" source="D:/New Folder/Deco.tsx"/>
+ <tileset firstgid="1" name="Tilemap_Flat" tilewidth="64" tileheight="64" tilecount="40" columns="10">
+  <image source="Tiny Swords (Update 010)/Terrain/Ground/Tilemap_Flat.png" width="640" height="256"/>
+ </tileset>
+ <tileset firstgid="41" name="Water" tilewidth="64" tileheight="64" tilecount="1" columns="1">
+  <image source="Tiny Swords (Update 010)/Terrain/Water/Water.png" width="64" height="64"/>
+ </tileset>
+ <tileset firstgid="42" name="Rocks_02" tilewidth="64" tileheight="64" tilecount="32" columns="16">
+  <image source="Tiny Swords (Update 010)/Terrain/Water/Rocks/Rocks_02.png" width="1024" height="128"/>
+ </tileset>
+ <tileset firstgid="74" name="Rocks_03" tilewidth="64" tileheight="64" tilecount="32" columns="16">
+  <image source="Tiny Swords (Update 010)/Terrain/Water/Rocks/Rocks_03.png" width="1024" height="128"/>
+ </tileset>
+ <tileset firstgid="106" name="Rocks_04" tilewidth="64" tileheight="64" tilecount="32" columns="16">
+  <image source="Tiny Swords (Update 010)/Terrain/Water/Rocks/Rocks_04.png" width="1024" height="128"/>
+ </tileset>
+ <tileset firstgid="138" name="Tilemap_Elevation" tilewidth="64" tileheight="64" tilecount="32" columns="4">
+  <image source="Tiny Swords (Update 010)/Terrain/Ground/Tilemap_Elevation.png" width="256" height="512"/>
+ </tileset>
+ <tileset firstgid="170" name="Tree" tilewidth="64" tileheight="64" tilecount="108" columns="12">
+  <image source="Tiny Swords (Update 010)/Resources/Trees/Tree.png" width="768" height="576"/>
+ </tileset>
+ <tileset firstgid="278" name="C:\Users\stasz\Downloads\Tiny Swords (Update 010)\Deco" tilewidth="192" tileheight="192" tilecount="16" columns="0">
+  <grid orientation="orthogonal" width="1" height="1"/>
+  <tile id="0">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/01.png"/>
+  </tile>
+  <tile id="1">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/02.png"/>
+  </tile>
+  <tile id="2">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/03.png"/>
+  </tile>
+  <tile id="3">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/04.png"/>
+  </tile>
+  <tile id="4">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/05.png"/>
+  </tile>
+  <tile id="5">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/06.png"/>
+  </tile>
+  <tile id="6">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/07.png"/>
+  </tile>
+  <tile id="7">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/08.png"/>
+  </tile>
+  <tile id="8">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/09.png"/>
+  </tile>
+  <tile id="9">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/10.png"/>
+  </tile>
+  <tile id="10">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/11.png"/>
+  </tile>
+  <tile id="11">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/12.png"/>
+  </tile>
+  <tile id="12">
+   <image width="64" height="64" source="Tiny Swords (Update 010)/Deco/13.png"/>
+  </tile>
+  <tile id="13">
+   <image width="64" height="128" source="Tiny Swords (Update 010)/Deco/16.png"/>
+  </tile>
+  <tile id="14">
+   <image width="64" height="128" source="Tiny Swords (Update 010)/Deco/17.png"/>
+  </tile>
+  <tile id="15">
+   <image width="192" height="192" source="Tiny Swords (Update 010)/Deco/18.png"/>
+  </tile>
+ </tileset>
  <layer id="1" name="ground" width="100" height="100">
   <data encoding="csv">
 12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,
