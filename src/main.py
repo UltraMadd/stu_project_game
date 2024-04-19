@@ -24,11 +24,11 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         self.player_sprite = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png", 0.5)
         self.player_sprite.center_x = self.window.width / 2
         self.player_sprite.center_y = self.window.height / 2
-        self.tiled_map = arcade.load_tilemap("map/map1.tmx", 1.5)
+        self.tiled_map = arcade.load_tilemap("map/map1.tmx", 1)
         self.scene = arcade.Scene.from_tilemap(self.tiled_map)
         self.camera = arcade.Camera(self.window.width, self.window.height)
         self.scene.add_sprite("player", self.player_sprite)
-        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, walls=[self.scene["2"], self.scene["3"], self.scene["4"]])
+        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, walls=[self.scene["water"], self.scene["groundcollision1"]])
 
     def center_camera_to_player(self):
         scr_center_x = self.player_sprite.center_x - (self.camera.viewport_width / 2)
