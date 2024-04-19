@@ -12,6 +12,7 @@ git clone https://github.com/UltraMadd/stu_project_game.git
 pip install -r requirements.txt
 ```
 
+
 Запустите
 ```shell
 python src/main.py
