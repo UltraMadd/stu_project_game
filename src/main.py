@@ -24,7 +24,7 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         self.player_sprite = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png", 0.5)
         self.player_sprite.center_x = self.window.width / 2
         self.player_sprite.center_y = self.window.height / 2
-        self.tiled_map = arcade.load_tilemap("map/testmap.tmj", 1.5)
+        self.tiled_map = arcade.load_tilemap("map/map.tmx", 1.5)
         self.scene = arcade.Scene.from_tilemap(self.tiled_map)
         self.camera = arcade.Camera(self.window.width, self.window.height)
         self.scene.add_sprite("player", self.player_sprite)
@@ -85,7 +85,7 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
             self.player_sprite.change_y /= total_velocity
 
     def on_key_press(self, symbol: int, modifiers: int):
-        """ Нажатие """
+        """ Нажатие клавиш """
 
         if symbol == arcade.key.W:
             self.up_pressed = True
@@ -99,7 +99,7 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         self.process_keychange()
 
     def on_key_release(self, symbol: int, modifiers: int):
-        """ Отпускание """
+        """ Отпускание клавиш """
 
         if symbol == arcade.key.W:
             self.up_pressed = False
