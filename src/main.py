@@ -1,9 +1,7 @@
-from dataclasses import dataclass
-
 import arcade
-import numpy as np
 
-from views.game_view import GameView
+from entities.player import Player
+
 
 class GameView(arcade.View):  # TODO player logic in arcade.Character
     def __init__(self):
@@ -14,7 +12,7 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         self.down_pressed = False
         self.left_pressed = False
         self.right_pressed = False
-        self.speed = 4
+        self.speed = 32
         self.tiled_map = None
         self.physics_engine = None
         self.camera = None
@@ -22,7 +20,7 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
     def setup(self):
         """ Настройки игры """
 
-        self.player_sprite = arcade.Sprite(":resources:images/animated_characters/female_person/femalePerson_idle.png", 0.5)
+        self.player_sprite = Player(":resources:images/animated_characters/female_person/femalePerson_idle.png", 0.5)
         self.player_sprite.center_x = self.window.width / 2
         self.player_sprite.center_y = self.window.height / 2
         self.tiled_map = arcade.load_tilemap("map/map1.tmx", 1)
@@ -43,6 +41,7 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         player_centered = [scr_center_x, scr_center_y]
 
         self.camera.move_to(player_centered)
+
     def on_show_view(self):
         """ Инициализация """
 
@@ -80,10 +79,10 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
             self.player_sprite.change_x = self.speed
         else:
             self.player_sprite.change_x = 0
-        total_velocity = (abs(self.player_sprite.change_x) + abs(self.player_sprite.change_y))//2
-        if total_velocity != 0:
-            self.player_sprite.change_x /= total_velocity
-            self.player_sprite.change_y /= total_velocity
+
+        if self.player_sprite.change_x and self.player_sprite.change_y:
+            self.player_sprite.change_x /= 2 
+            self.player_sprite.change_y /= 2 
 
     def on_key_press(self, symbol: int, modifiers: int):
         """ Нажатие клавиш """
