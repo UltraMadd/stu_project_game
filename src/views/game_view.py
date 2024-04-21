@@ -31,40 +31,26 @@ class GameView(arcade.View):
 
         self.setup_animations()
         self.setup_physics()
-
+    
+    def load_player_animation_frames(self, first_frame: str, all_frames: str):
+        res = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("textures", "player", first_frame))))]
+        for i in range(1, 3):
+            texturee = arcade.load_texture(abspath(join("textures", "player", all_frames)), x=i*24, y=0, width=24, height=31)
+            anim = arcade.AnimationKeyframe(i, 120, texturee)
+            res.append(anim)
+        return res
 
     def setup_animations(self):
         if self.player_sprite.change_x == 0 and self.player_sprite.change_y == 0:
-            self.player_sprite.frames = []
-            self.player_sprite.frames.append(arcade.AnimationKeyframe(0, 120, self.player_sprite.texture))
+            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, self.player_sprite.texture)]*3  # FIXME Костыль*3?
         if self.player_sprite.change_x < 0:
-            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("textures", "player", "walkleft1.png"))))]
-            for i in range(1, 3):
-                texturee = arcade.load_texture(abspath(join("textures", "player", "walkleft.png")), x=i*24, y=0, width=24, height=31)
-                anim = arcade.AnimationKeyframe(i, 120, texturee)
-                self.player_sprite.frames.append(anim)
+            self.player_sprite.frames = self.load_player_animation_frames("walkleft1.png", "walkleft.png")
         elif self.player_sprite.change_x > 0:
-            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("textures", "player", "walkright1.png"))))]
-            for i in range(1, 3):
-                texturee = arcade.load_texture(abspath(join("textures", "player", "walkright.png")), x=i*24, y=0, width=24, height=31)
-                anim = arcade.AnimationKeyframe(i, 180, texturee)
-                self.player_sprite.frames.append(anim)
-
+            self.player_sprite.frames = self.load_player_animation_frames("walkright1.png", "walkright.png")
         if self.player_sprite.change_y < 0:
-            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("textures", "player", "walkback1.png"))))]
-            for i in range(1, 3):
-                texturee = arcade.load_texture(abspath(join("textures", "player", "walkdown.png")), x=i*24, y=0, width=24, height=32)
-                anim = arcade.AnimationKeyframe(i, 120, texturee)
-                self.player_sprite.frames.append(anim)
-
+            self.player_sprite.frames = self.load_player_animation_frames("walkback1.png", "walkdown.png")
         elif self.player_sprite.change_y > 0:
-            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("textures", "player", "walkup1.png"))))]
-            for i in range(1, 3):
-                texturee = arcade.load_texture(abspath(join("textures", "player", "walkup.png")), x=i*24, y=0, width=24, height=32)
-                anim = arcade.AnimationKeyframe(i, 120, texturee)
-                self.player_sprite.frames.append(anim)
-
-
+            self.player_sprite.frames = self.load_player_animation_frames("walkup1.png", "walkup.png")
 
     def setup_physics(self):
         self.player_list.append(self.player_sprite)
@@ -85,6 +71,7 @@ class GameView(arcade.View):
         player_centered = [scr_center_x, scr_center_y]
 
         self.camera.move_to(player_centered)
+
     def on_show_view(self):
         self.setup()
         arcade.set_background_color(arcade.color.TEA_GREEN)
@@ -100,7 +87,11 @@ class GameView(arcade.View):
         self.center_camera_to_player()
         self.physics_engine.update()
         self.setup_animations()
-        self.player_list.update_animation()
+        try:
+            if self.player_sprite.frames:
+                self.player_list.update_animation()
+        except IndexError as e:
+            print(e, self.player_sprite.frames)
 
 
     def process_keychange(self):
