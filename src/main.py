@@ -16,7 +16,7 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
     def __init__(self):
         super().__init__()
         self.scene = None
-        self.player_sprite = None
+        self.player = None
         self.up_pressed = False
         self.down_pressed = False
         self.left_pressed = False
@@ -27,20 +27,20 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         self.enemies = None
 
     def setup(self):
-        self.player_sprite = Player(":resources:images/animated_characters/female_person/femalePerson_idle.png", 0.5)
-        self.player_sprite.center_x = self.window.width / 2
-        self.player_sprite.center_y = self.window.height / 2
+        self.player = Player(":resources:images/animated_characters/female_person/femalePerson_idle.png")
+        self.player.center_x = self.window.width / 2
+        self.player.center_y = self.window.height / 2
         self.tiled_map = arcade.load_tilemap("map/map1.tmx", 1)
         self.scene = arcade.Scene.from_tilemap(self.tiled_map)
         self.camera = arcade.Camera(self.window.width, self.window.height)
-        self.scene.add_sprite("player", self.player_sprite)
-        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, walls=[self.scene["water"], self.scene["groundcollision1"]])
+        self.scene.add_sprite("player", self.player)
+        self.physics_engine = arcade.PhysicsEngineSimple(self.player, walls=[self.scene["water"], self.scene["groundcollision1"]])
         self.enemies = arcade.SpriteList()
         self.enemies.append(Enemy(center_x=1000, center_y=1000))
 
     def center_camera_to_player(self):
-        scr_center_x = self.player_sprite.center_x - (self.camera.viewport_width / 2)
-        scr_center_y = self.player_sprite.center_y - (self.camera.viewport_height / 2)
+        scr_center_x = self.player.center_x - (self.camera.viewport_width / 2)
+        scr_center_y = self.player.center_y - (self.camera.viewport_height / 2)
 
         if scr_center_x < 0:
             scr_center_x = 0
@@ -59,8 +59,9 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         self.clear()
         self.scene.draw()
         self.camera.use()
-        self.player_sprite.draw()
+        self.player.draw()
         self.enemies.draw()
+        arcade.draw_text(str(self.player.hitpoints), self.player.center_x, self.player.center_y, arcade.color.RED, 40, width=100, align="center")
 
     def on_update(self, delta_time):
         self.process_keychange()
@@ -69,18 +70,17 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         self.update_enemies(delta_time)
 
     def update_enemies(self, delta_time):
-        player_pos = gmath.Vec2(self.player_sprite.center_x, self.player_sprite.center_y)
+        player_pos = gmath.Vec2(self.player.center_x, self.player.center_y)
         for enemy in self.enemies:
             camera_x, camera_y = self.camera.position
             camera_w, camera_h = self.camera.viewport_width, self.camera.viewport_height
             enemy_pos = gmath.Vec2(enemy.center_x, enemy.center_y)
             enemy2player_distance = player_pos.distance(enemy_pos)
 
-            if enemy2player_distance <= enemy.attack.attack_range:
-                if enemy.attacking:
-                    enemy.update_attack(delta_time)
-                else:
-                    enemy.start_attacking(self.player)
+            if enemy.attacking:
+                enemy.update_attack(delta_time)
+            elif enemy2player_distance <= enemy.attack.attack_start_range:
+                enemy.start_attacking(self.player)
             elif is_point_in_rect(enemy.center_x, enemy.center_y, camera_x, camera_y, camera_w, camera_h):
                 if not enemy.attacking:
                     enemy_x_delta, enemy_y_delta = (player_pos - enemy_pos).normalize()
@@ -89,22 +89,22 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
 
     def process_keychange(self):
         if self.up_pressed and not self.down_pressed:
-            self.player_sprite.change_y = self.player_sprite.speed
+            self.player.change_y = self.player.speed
         elif self.down_pressed and not self.up_pressed:
-            self.player_sprite.change_y = -self.player_sprite.speed
+            self.player.change_y = -self.player.speed
         else:
-            self.player_sprite.change_y = 0
+            self.player.change_y = 0
 
         if self.left_pressed and not self.right_pressed:
-            self.player_sprite.change_x = -self.player_sprite.speed
+            self.player.change_x = -self.player.speed
         elif self.right_pressed and not self.left_pressed:
-            self.player_sprite.change_x = self.player_sprite.speed
+            self.player.change_x = self.player.speed
         else:
-            self.player_sprite.change_x = 0
+            self.player.change_x = 0
 
-        if self.player_sprite.change_x and self.player_sprite.change_y:
-            self.player_sprite.change_x /= 1.5
-            self.player_sprite.change_y /= 1.5
+        if self.player.change_x and self.player.change_y:
+            self.player.change_x /= 1.5
+            self.player.change_y /= 1.5
 
     def on_key_press(self, symbol: int, modifiers: int):
         if symbol == arcade.key.W:
