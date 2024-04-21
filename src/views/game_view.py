@@ -1,6 +1,6 @@
 import arcade
 from os.path import abspath, join
-from src.entities.player import Player
+from entities.player import Player
 
 
 class GameView(arcade.View):
@@ -24,7 +24,7 @@ class GameView(arcade.View):
         self.player_list = arcade.SpriteList()
         self.player_sprite.center_x = self.window.width / 2
         self.player_sprite.center_y = self.window.height / 2
-        self.tiled_map = arcade.load_tilemap(abspath(join("..", "map", "map1.tmx")), 1)
+        self.tiled_map = arcade.load_tilemap(abspath(join("map", "map1.tmx")), 1)
         self.scene = arcade.Scene.from_tilemap(self.tiled_map)
         self.camera = arcade.Camera(self.window.width, self.window.height)
         self.scene.add_sprite("player", self.player_sprite)
@@ -38,29 +38,29 @@ class GameView(arcade.View):
             self.player_sprite.frames = []
             self.player_sprite.frames.append(arcade.AnimationKeyframe(0, 120, self.player_sprite.texture))
         if self.player_sprite.change_x < 0:
-            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("..", "textures", "player", "walkleft1.png"))))]
+            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("textures", "player", "walkleft1.png"))))]
             for i in range(1, 3):
-                texturee = arcade.load_texture(abspath(join("..", "textures", "player", "walkleft.png")), x=i*24, y=0, width=24, height=31)
+                texturee = arcade.load_texture(abspath(join("textures", "player", "walkleft.png")), x=i*24, y=0, width=24, height=31)
                 anim = arcade.AnimationKeyframe(i, 120, texturee)
                 self.player_sprite.frames.append(anim)
         elif self.player_sprite.change_x > 0:
-            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("..", "textures", "player", "walkright1.png"))))]
+            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("textures", "player", "walkright1.png"))))]
             for i in range(1, 3):
-                texturee = arcade.load_texture(abspath(join("..", "textures", "player", "walkright.png")), x=i*24, y=0, width=24, height=31)
+                texturee = arcade.load_texture(abspath(join("textures", "player", "walkright.png")), x=i*24, y=0, width=24, height=31)
                 anim = arcade.AnimationKeyframe(i, 180, texturee)
                 self.player_sprite.frames.append(anim)
 
         if self.player_sprite.change_y < 0:
-            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("..", "textures", "player", "walkback1.png"))))]
+            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("textures", "player", "walkback1.png"))))]
             for i in range(1, 3):
-                texturee = arcade.load_texture(abspath(join("..", "textures", "player", "walkdown.png")), x=i*24, y=0, width=24, height=32)
+                texturee = arcade.load_texture(abspath(join("textures", "player", "walkdown.png")), x=i*24, y=0, width=24, height=32)
                 anim = arcade.AnimationKeyframe(i, 120, texturee)
                 self.player_sprite.frames.append(anim)
 
         elif self.player_sprite.change_y > 0:
-            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("..", "textures", "player", "walkup1.png"))))]
+            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("textures", "player", "walkup1.png"))))]
             for i in range(1, 3):
-                texturee = arcade.load_texture(abspath(join("..", "textures", "player", "walkup.png")), x=i*24, y=0, width=24, height=32)
+                texturee = arcade.load_texture(abspath(join("textures", "player", "walkup.png")), x=i*24, y=0, width=24, height=32)
                 anim = arcade.AnimationKeyframe(i, 120, texturee)
                 self.player_sprite.frames.append(anim)
 
