@@ -42,10 +42,10 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         scr_center_x = self.player_sprite.center_x - (self.camera.viewport_width / 2)
         scr_center_y = self.player_sprite.center_y - (self.camera.viewport_height / 2)
 
-        # if scr_center_x < 0:
-        #     scr_center_x = 0
-        # if scr_center_y < 0:
-        #     scr_center_y = 0
+        if scr_center_x < 0:
+            scr_center_x = 0
+        if scr_center_y < 0:
+            scr_center_y = 0
 
         player_centered = [scr_center_x, scr_center_y]
 
