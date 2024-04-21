@@ -36,7 +36,7 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         self.scene.add_sprite("player", self.player_sprite)
         self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, walls=[self.scene["water"], self.scene["groundcollision1"]])
         self.enemies = arcade.SpriteList()
-        self.enemies.append(Enemy(1000, 1000))
+        self.enemies.append(Enemy(center_x=1000, center_y=1000))
 
     def center_camera_to_player(self):
         scr_center_x = self.player_sprite.center_x - (self.camera.viewport_width / 2)
@@ -69,18 +69,23 @@ class GameView(arcade.View):  # TODO player logic in arcade.Character
         self.update_enemies(delta_time)
 
     def update_enemies(self, delta_time):
+        player_pos = gmath.Vec2(self.player_sprite.center_x, self.player_sprite.center_y)
         for enemy in self.enemies:
             camera_x, camera_y = self.camera.position
             camera_w, camera_h = self.camera.viewport_width, self.camera.viewport_height
-            if is_point_in_rect(enemy.center_x, enemy.center_y, camera_x, camera_y, camera_w, camera_h):
-                enemy_x_delta, enemy_y_delta = (
-                    gmath.Vec2(self.player_sprite.center_x, self.player_sprite.center_y)
-                    - gmath.Vec2(enemy.center_x, enemy.center_y)
-                ).normalize()
-                enemy.center_x += enemy_x_delta * delta_time * enemy.speed
-                enemy.center_y += enemy_y_delta * delta_time * enemy.speed
-        if len(self.enemies) > 10:
-            return
+            enemy_pos = gmath.Vec2(enemy.center_x, enemy.center_y)
+            enemy2player_distance = player_pos.distance(enemy_pos)
+
+            if enemy2player_distance <= enemy.attack.attack_range:
+                if enemy.attacking:
+                    enemy.update_attack(delta_time)
+                else:
+                    enemy.start_attacking(self.player)
+            elif is_point_in_rect(enemy.center_x, enemy.center_y, camera_x, camera_y, camera_w, camera_h):
+                if not enemy.attacking:
+                    enemy_x_delta, enemy_y_delta = (player_pos - enemy_pos).normalize()
+                    enemy.center_x += enemy_x_delta * delta_time * enemy.speed
+                    enemy.center_y += enemy_y_delta * delta_time * enemy.speed
 
     def process_keychange(self):
         if self.up_pressed and not self.down_pressed:
