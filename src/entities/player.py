@@ -1,9 +1,10 @@
 import arcade
+from os.path import abspath, join
 
 
-class Player(arcade.Sprite):
+class Player(arcade.AnimatedTimeBasedSprite):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.scale = 1
-        self.texture = arcade.load_texture(":resources:images/animated_characters/female_person/femalePerson_idle.png")
+        self.scale = 1.5
+        self.texture = arcade.load_texture(abspath(join("..", "textures", "player", "walkback1.png")))
         self.set_hit_box(self.texture.hit_box_points)
