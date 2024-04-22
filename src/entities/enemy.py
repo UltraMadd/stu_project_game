@@ -7,17 +7,27 @@ import pyglet.math as gmath
 class EnemyAttack:
     def __init__(self, attack_range):
         self.attack_range = attack_range
-        self.attack_start_range = attack_range//2
+        self.attack_start_range = attack_range // 2
         self.prepare_time = 0.5
         self.attack_time = 0.5 + self.prepare_time
         self.end_time = 0.3 + self.attack_time
-    
+
     @classmethod
     def simple(cls):
         return cls(128)
 
+
 class Enemy(Entity):
-    def __init__(self, scale=0.4, center_x=0, center_y=0, speed=128, attack: EnemyAttack=EnemyAttack.simple(), *args, **kwargs):
+    def __init__(
+        self,
+        scale=0.4,
+        center_x=0,
+        center_y=0,
+        speed=128,
+        attack: EnemyAttack = EnemyAttack.simple(),
+        *args,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.scale = scale
         self.speed = speed
@@ -26,7 +36,9 @@ class Enemy(Entity):
         self.attacking_target = None
         self.damaged = False
         self.attacking_timer = 0
-        self.texture = arcade.load_texture(":resources:images/animated_characters/female_person/femalePerson_idle.png")
+        self.texture = arcade.load_texture(
+            ":resources:images/animated_characters/female_person/femalePerson_idle.png"
+        )
         self.set_hit_box(self.texture.hit_box_points)
         self.center_x = center_x
         self.center_y = center_y
@@ -39,11 +51,16 @@ class Enemy(Entity):
 
     def update_attack(self, delta_time):
         self.attacking_timer += delta_time
-        target_pos = gmath.Vec2(self.attacking_target.center_x, self.attacking_target.center_y)
+        target_pos = gmath.Vec2(
+            self.attacking_target.center_x, self.attacking_target.center_y
+        )
         enemy_pos = gmath.Vec2(self.center_x, self.center_y)
         enemy2target_distance = target_pos.distance(enemy_pos)
 
-        if self.attacking_timer < self.attack.end_time and enemy2target_distance > self.attack.attack_range:
+        if (
+            self.attacking_timer < self.attack.end_time
+            and enemy2target_distance > self.attack.attack_range
+        ):
             self.attacking_timer = self.attack.end_time
         if self.attacking_timer < self.attack.prepare_time:
             pass
@@ -55,5 +72,3 @@ class Enemy(Entity):
             pass
         else:
             self.attacking = False
-
-
