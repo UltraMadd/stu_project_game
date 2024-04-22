@@ -7,8 +7,7 @@ from entities.enemy import Enemy
 
 
 def is_point_in_rect(point_x, point_y, rect_x, rect_y, rect_w, rect_h):
-    return (rect_x < point_x < rect_x + rect_w) and \
-           (rect_y < point_y < rect_y + rect_h)
+    return (rect_x < point_x < rect_x + rect_w) and (rect_y < point_y < rect_y + rect_h)
 
 
 class GameView(arcade.View):
@@ -39,21 +38,29 @@ class GameView(arcade.View):
 
         self.setup_animations()
         self.setup_physics()
-    
+
         self.enemies = arcade.SpriteList()
         self.enemies.append(Enemy(center_x=1000, center_y=1000))
 
     def load_player_animation_frames(self, all_frames: str):
         res = []
         for i in (1, 0, 1, 2):
-            texturee = arcade.load_texture(abspath(join("textures", "player", all_frames)), x=i*32, y=0, width=32, height=32)
+            texturee = arcade.load_texture(
+                abspath(join("textures", "player", all_frames)),
+                x=i * 32,
+                y=0,
+                width=32,
+                height=32,
+            )
             anim = arcade.AnimationKeyframe(i, 120, texturee)
             res.append(anim)
         return res
 
     def setup_animations(self):
         if self.player.change_x == 0 and self.player.change_y == 0:
-            self.player.frames = [arcade.AnimationKeyframe(0, 120, self.player.texture)]*4  # FIXME Костыль*3?
+            self.player.frames = [
+                arcade.AnimationKeyframe(0, 120, self.player.texture)
+            ] * 4  # FIXME Костыль*3?
         if self.player.change_x < 0:
             self.player.frames = self.load_player_animation_frames("walkleft.png")
         elif self.player.change_x > 0:
@@ -66,8 +73,8 @@ class GameView(arcade.View):
     def setup_physics(self):
         self.player_list.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player,
-            walls=[self.scene["water"], self.scene["groundcollision1"]])
+            self.player, walls=[self.scene["water"], self.scene["groundcollision1"]]
+        )
 
     def center_camera_to_player(self):
         scr_center_x = self.player.center_x - (self.camera.viewport_width / 2)
@@ -92,7 +99,15 @@ class GameView(arcade.View):
         self.camera.use()
         self.player_list.draw()
         self.enemies.draw()
-        arcade.draw_text(str(self.player.hitpoints), self.player.center_x, self.player.center_y, arcade.color.RED, 40, width=100, align="center")
+        arcade.draw_text(
+            str(self.player.hitpoints),
+            self.player.center_x,
+            self.player.center_y,
+            arcade.color.RED,
+            40,
+            width=100,
+            align="center",
+        )
 
     def on_update(self, delta_time):
         self.process_keychange()
@@ -118,7 +133,9 @@ class GameView(arcade.View):
                 enemy.update_attack(delta_time)
             elif enemy2player_distance <= enemy.attack.attack_start_range:
                 enemy.start_attacking(self.player)
-            elif is_point_in_rect(enemy.center_x, enemy.center_y, camera_x, camera_y, camera_w, camera_h):
+            elif is_point_in_rect(
+                enemy.center_x, enemy.center_y, camera_x, camera_y, camera_w, camera_h
+            ):
                 if not enemy.attacking:
                     enemy_x_delta, enemy_y_delta = (player_pos - enemy_pos).normalize()
                     enemy.center_x += enemy_x_delta * delta_time * enemy.speed
