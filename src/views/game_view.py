@@ -1,4 +1,5 @@
 import arcade
+from os.path import abspath, join
 import pyglet.math as gmath
 
 from entities.player import Player
@@ -13,28 +14,60 @@ def is_point_in_rect(point_x, point_y, rect_x, rect_y, rect_w, rect_h):
 class GameView(arcade.View):
     def __init__(self):
         super().__init__()
+        self.player_list = None
         self.scene = None
         self.player = None
         self.up_pressed = False
         self.down_pressed = False
         self.left_pressed = False
         self.right_pressed = False
+        self.physics_engine = None
         self.tiled_map = None
         self.physics_engine = None
         self.camera = None
-        self.enemies = None
+        self.scene = None
 
     def setup(self):
-        self.player = Player(":resources:images/animated_characters/female_person/femalePerson_idle.png")
+        self.player = Player()
+        self.player_list = arcade.SpriteList()
         self.player.center_x = self.window.width / 2
         self.player.center_y = self.window.height / 2
-        self.tiled_map = arcade.load_tilemap("map/map1.tmx", 1)
+        self.tiled_map = arcade.load_tilemap(abspath(join("map", "map1.tmx")), 1)
         self.scene = arcade.Scene.from_tilemap(self.tiled_map)
         self.camera = arcade.Camera(self.window.width, self.window.height)
         self.scene.add_sprite("player", self.player)
-        self.physics_engine = arcade.PhysicsEngineSimple(self.player, walls=[self.scene["water"], self.scene["groundcollision1"]])
+
+        self.setup_animations()
+        self.setup_physics()
+    
         self.enemies = arcade.SpriteList()
         self.enemies.append(Enemy(center_x=1000, center_y=1000))
+
+    def load_player_animation_frames(self, all_frames: str):
+        res = []
+        for i in (1, 0, 1, 2):
+            texturee = arcade.load_texture(abspath(join("textures", "player", all_frames)), x=i*32, y=0, width=32, height=32)
+            anim = arcade.AnimationKeyframe(i, 120, texturee)
+            res.append(anim)
+        return res
+
+    def setup_animations(self):
+        if self.player.change_x == 0 and self.player.change_y == 0:
+            self.player.frames = [arcade.AnimationKeyframe(0, 120, self.player.texture)]*4  # FIXME Костыль*3?
+        if self.player.change_x < 0:
+            self.player.frames = self.load_player_animation_frames("walkleft.png")
+        elif self.player.change_x > 0:
+            self.player.frames = self.load_player_animation_frames("walkright.png")
+        if self.player.change_y < 0:
+            self.player.frames = self.load_player_animation_frames("walkdown.png")
+        elif self.player.change_y > 0:
+            self.player.frames = self.load_player_animation_frames("walkup.png")
+
+    def setup_physics(self):
+        self.player_list.append(self.player)
+        self.physics_engine = arcade.PhysicsEngineSimple(
+            self.player,
+            walls=[self.scene["water"], self.scene["groundcollision1"]])
 
     def center_camera_to_player(self):
         scr_center_x = self.player.center_x - (self.camera.viewport_width / 2)
@@ -57,15 +90,21 @@ class GameView(arcade.View):
         self.clear()
         self.scene.draw()
         self.camera.use()
-        self.player.draw()
+        self.player_list.draw()
         self.enemies.draw()
         arcade.draw_text(str(self.player.hitpoints), self.player.center_x, self.player.center_y, arcade.color.RED, 40, width=100, align="center")
 
     def on_update(self, delta_time):
         self.process_keychange()
-        self.physics_engine.update()
         self.center_camera_to_player()
+        self.physics_engine.update()
+        self.setup_animations()
         self.update_enemies(delta_time)
+        try:
+            if self.player.frames:
+                self.player_list.update_animation()
+        except IndexError as e:
+            print(e, self.player.frames)
 
     def update_enemies(self, delta_time):
         player_pos = gmath.Vec2(self.player.center_x, self.player.center_y)
