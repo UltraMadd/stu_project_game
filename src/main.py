@@ -1,19 +1,14 @@
-from dataclasses import dataclass
 import arcade
-import numpy as np
+
 from views.game_view import GameView
 
 
 class GameWindow(arcade.Window):
-    """ Класс окна """
-
     def __init__(self, width, height, title):
         super().__init__(width, height, title, resizable=True)
 
 
 class Game:
-    """ Класс игры """
-
     def __init__(self, game_window):
         self.game_window = game_window
 
@@ -23,7 +18,6 @@ class Game:
 
 
 def main():
-
     game_window = GameWindow(1600, 900, "the game")
     game = Game(game_window)
     game.run()

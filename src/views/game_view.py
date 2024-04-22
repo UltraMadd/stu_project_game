@@ -32,9 +32,9 @@ class GameView(arcade.View):
         self.setup_animations()
         self.setup_physics()
     
-    def load_player_animation_frames(self, first_frame: str, all_frames: str):
-        res = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("textures", "player", first_frame))))]
-        for i in range(1, 3):
+    def load_player_animation_frames(self, all_frames: str):
+        res = []
+        for i in (1, 0, 1, 2):
             texturee = arcade.load_texture(abspath(join("textures", "player", all_frames)), x=i*32, y=0, width=32, height=32)
             anim = arcade.AnimationKeyframe(i, 120, texturee)
             res.append(anim)
@@ -42,15 +42,15 @@ class GameView(arcade.View):
 
     def setup_animations(self):
         if self.player_sprite.change_x == 0 and self.player_sprite.change_y == 0:
-            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, self.player_sprite.texture)]*3  # FIXME Костыль*3?
+            self.player_sprite.frames = [arcade.AnimationKeyframe(0, 120, self.player_sprite.texture)]*4  # FIXME Костыль*3?
         if self.player_sprite.change_x < 0:
-            self.player_sprite.frames = self.load_player_animation_frames("walkleft1.png", "walkleft.png")
+            self.player_sprite.frames = self.load_player_animation_frames("walkleft.png")
         elif self.player_sprite.change_x > 0:
-            self.player_sprite.frames = self.load_player_animation_frames("walkright1.png", "walkright.png")
+            self.player_sprite.frames = self.load_player_animation_frames("walkright.png")
         if self.player_sprite.change_y < 0:
-            self.player_sprite.frames = self.load_player_animation_frames("walkback1.png", "walkdown.png")
+            self.player_sprite.frames = self.load_player_animation_frames("walkdown.png")
         elif self.player_sprite.change_y > 0:
-            self.player_sprite.frames = self.load_player_animation_frames("walkup1.png", "walkup.png")
+            self.player_sprite.frames = self.load_player_animation_frames("walkup.png")
 
     def setup_physics(self):
         self.player_list.append(self.player_sprite)
