@@ -35,7 +35,7 @@ class GameView(arcade.View):
     def load_player_animation_frames(self, first_frame: str, all_frames: str):
         res = [arcade.AnimationKeyframe(0, 120, arcade.load_texture(abspath(join("textures", "player", first_frame))))]
         for i in range(1, 3):
-            texturee = arcade.load_texture(abspath(join("textures", "player", all_frames)), x=i*24, y=0, width=24, height=31)
+            texturee = arcade.load_texture(abspath(join("textures", "player", all_frames)), x=i*32, y=0, width=32, height=32)
             anim = arcade.AnimationKeyframe(i, 120, texturee)
             res.append(anim)
         return res
@@ -56,8 +56,7 @@ class GameView(arcade.View):
         self.player_list.append(self.player_sprite)
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite,
-            walls=[self.scene["water"], self.scene["groundcollision1"]]
-        )
+            walls=[self.scene["water"], self.scene["groundcollision1"]])
 
     def center_camera_to_player(self):
         scr_center_x = self.player_sprite.center_x - (self.camera.viewport_width / 2)
