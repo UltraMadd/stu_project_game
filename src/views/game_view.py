@@ -106,7 +106,7 @@ class GameView(arcade.View):
             centy,
             500,
             50,
-            arcade.color.GRAY
+            arcade.color.DARK_GREEN
         )
         arcade.draw_rectangle_outline(
             centx,
