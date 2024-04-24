@@ -120,6 +120,7 @@ class GameView(arcade.View):
             centy - HP_TEXT_SIZE // 2,
             arcade.color.WHITE,
             HP_TEXT_SIZE,
+            multiline=False,
         )
 
     def on_draw(self):
