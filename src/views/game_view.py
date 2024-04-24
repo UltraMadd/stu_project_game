@@ -6,6 +6,12 @@ from entities.player import Player
 from entities.enemy import Enemy
 
 
+
+HP_BAR_WIDTH = 500 
+HP_BAR_HEIGHT = 50
+HP_TEXT_SIZE = 20
+
+
 def is_point_in_rect(point_x, point_y, rect_x, rect_y, rect_w, rect_h):
     return (rect_x < point_x < rect_x + rect_w) and (rect_y < point_y < rect_y + rect_h)
 
@@ -94,18 +100,17 @@ class GameView(arcade.View):
         arcade.set_background_color(arcade.color.TEA_GREEN)
 
     def draw_hp(self):
-        HP_BAR_WIDTH = self.camera.viewport_width // 3
-        HP_BAR_HEIGHT = self.camera.viewport_height // 14
-        hp = self.player.hitpoints
         centx = self.camera.position.x + self.camera.viewport_width // 2
         centy = self.camera.position.y + HP_BAR_HEIGHT
+
         arcade.draw_rectangle_filled(
             centx, centy, HP_BAR_WIDTH, HP_BAR_HEIGHT, arcade.color.DARK_GREEN
         )
         arcade.draw_rectangle_outline(
             centx, centy, HP_BAR_WIDTH, HP_BAR_HEIGHT, arcade.color.BLACK
         )
-        hp_bar_indicator_width = int(HP_BAR_WIDTH * hp / self.player.max_hitpoints)
+
+        hp_bar_indicator_width = int(HP_BAR_WIDTH * self.player.hitpoints / self.player.max_hitpoints)
         arcade.draw_texture_rectangle(
             centx + (hp_bar_indicator_width - HP_BAR_WIDTH)/2,
             centy,
@@ -113,13 +118,14 @@ class GameView(arcade.View):
             HP_BAR_HEIGHT,
             arcade.load_texture(abspath(join("textures", "img.png"))),
         )
-        HP_TEXT_SIZE = HP_BAR_HEIGHT // 3
+
         arcade.draw_text(
             f"{self.player.hitpoints} / {self.player.max_hitpoints}",
-            centx - HP_BAR_WIDTH // 2,
+            centx,
             centy - HP_TEXT_SIZE // 2,
             arcade.color.WHITE,
             HP_TEXT_SIZE,
+            anchor_x="center",
         )
 
     def on_draw(self):
