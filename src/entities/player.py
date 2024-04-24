@@ -8,7 +8,7 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.scale = 1.5
-        self.speed = 3
+        self.speed = 2
         self.texture = arcade.load_texture(
             abspath(join("textures", "player", "walkback1.png"))
         )

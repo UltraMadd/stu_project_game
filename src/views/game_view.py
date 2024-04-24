@@ -25,17 +25,17 @@ class GameView(arcade.View):
         self.physics_engine = None
         self.camera = None
         self.scene = None
-        self.rectangle = None
 
     def setup(self):
         self.player = Player()
         self.player_list = arcade.SpriteList()
-        self.player.center_x = 2000
-        self.player.center_y = 2000
+        self.player.center_x = self.window.width / 2
+        self.player.center_y = self.window.height / 2
         self.tiled_map = arcade.load_tilemap(abspath(join("map", "map1.tmx")), 1)
         self.scene = arcade.Scene.from_tilemap(self.tiled_map)
         self.camera = arcade.Camera(self.window.width, self.window.height)
         self.scene.add_sprite("player", self.player)
+
         self.setup_animations()
         self.setup_physics()
 
@@ -93,47 +93,21 @@ class GameView(arcade.View):
         self.setup()
         arcade.set_background_color(arcade.color.TEA_GREEN)
 
-
-    def draw_hp(self, hp):
-        centx = self.player.center_x - (self.window.width / 2) + 800
-        centy = self.player.center_y - (self.window.height / 2) + 40
-        if centx < 800:
-            centx = 800
-        if centy < 40:
-            centy = 40
-        arcade.draw_rectangle_filled(
-            centx,
-            centy,
-            500,
-            50,
-            arcade.color.DARK_GREEN
-        )
-        arcade.draw_rectangle_outline(
-            centx,
-            centy,
-            500,
-            50,
-            arcade.color.BLACK
-        )
-        arcade.draw_texture_rectangle(centx + 1 - (self.player.max_hitpoints - self.player.hitpoints) * 2.5, centy + 1, 497 * hp / 100, 48, arcade.load_texture(abspath(join("textures", "img.png"))))
-        arcade.draw_text(
-            f"{self.player.hitpoints} / {self.player.max_hitpoints}",
-            centx - 52,
-            centy - 7,
-            arcade.color.WHITE,
-            20,
-            width=220,
-        )
-
-
     def on_draw(self):
         self.clear()
         self.scene.draw()
         self.camera.use()
         self.player_list.draw()
         self.enemies.draw()
-
-        self.draw_hp(self.player.hitpoints)
+        arcade.draw_text(
+            str(self.player.hitpoints),
+            self.player.center_x,
+            self.player.center_y,
+            arcade.color.RED,
+            40,
+            width=100,
+            align="center",
+        )
 
     def on_update(self, delta_time):
         self.process_keychange()
