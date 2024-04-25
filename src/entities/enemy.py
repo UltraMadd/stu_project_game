@@ -32,10 +32,10 @@ class Enemy(Entity):
         self.scale = scale
         self.speed = speed
         self.attack = attack
-        self.attacking = False
-        self.attacking_target = None
+        self.is_attacking = False
+        self.is_attacking_target = None
         self.damaged = False
-        self.attacking_timer = 0
+        self.is_attacking_timer = 0
         self.texture = arcade.load_texture(
             ":resources:images/animated_characters/female_person/femalePerson_idle.png"
         )
@@ -44,31 +44,31 @@ class Enemy(Entity):
         self.center_y = center_y
 
     def start_attacking(self, target):
-        self.attacking = True
+        self.is_attacking = True
         self.damaged = False
-        self.attacking_timer = 0
-        self.attacking_target = target
+        self.is_attacking_timer = 0
+        self.is_attacking_target = target
 
     def update_attack(self, delta_time):
-        self.attacking_timer += delta_time
+        self.is_attacking_timer += delta_time
         target_pos = gmath.Vec2(
-            self.attacking_target.center_x, self.attacking_target.center_y
+            self.is_attacking_target.center_x, self.is_attacking_target.center_y
         )
         enemy_pos = gmath.Vec2(self.center_x, self.center_y)
         enemy2target_distance = target_pos.distance(enemy_pos)
 
         if (
-            self.attacking_timer < self.attack.end_time
+            self.is_attacking_timer < self.attack.end_time
             and enemy2target_distance > self.attack.attack_range
         ):
-            self.attacking_timer = self.attack.end_time
-        if self.attacking_timer < self.attack.prepare_time:
+            self.is_attacking_timer = self.attack.end_time
+        if self.is_attacking_timer < self.attack.prepare_time:
             pass
-        elif self.attacking_timer < self.attack.attack_time:
+        elif self.is_attacking_timer < self.attack.attack_time:
             if not self.damaged:
-                self.attacking_target.damage(5)
+                self.is_attacking_target.damage(5)
                 self.damaged = True
-        elif self.attacking_timer < self.attack.end_time:
+        elif self.is_attacking_timer < self.attack.end_time:
             pass
         else:
-            self.attacking = False
+            self.is_attacking = False
