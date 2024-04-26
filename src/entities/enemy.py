@@ -32,7 +32,7 @@ class Enemy(Entity):
         self.scale = scale
         self.speed = speed
         self.attack = attack
-        self.attacking = False
+        self.is_attacking = False
         self.attacking_target = None
         self.damaged = False
         self.attacking_timer = 0
@@ -44,7 +44,7 @@ class Enemy(Entity):
         self.center_y = center_y
 
     def start_attacking(self, target):
-        self.attacking = True
+        self.is_attacking = True
         self.damaged = False
         self.attacking_timer = 0
         self.attacking_target = target
@@ -71,4 +71,5 @@ class Enemy(Entity):
         elif self.attacking_timer < self.attack.end_time:
             pass
         else:
-            self.attacking = False
+            self.is_attacking = False
+
