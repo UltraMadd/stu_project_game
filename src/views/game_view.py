@@ -1,6 +1,6 @@
 import math
 from os.path import abspath, join
-
+from random import randint
 
 import arcade
 import pyglet.math as gmath
@@ -8,21 +8,12 @@ from pyglet.math import Vec2
 
 from entities.player import Player
 from entities.enemy import Enemy
+from utils import mul_vec_const, is_point_in_rect, sprite_pos
 
 
 HP_BAR_WIDTH = 500
 HP_BAR_HEIGHT = 50
 HP_TEXT_SIZE = 20
-
-
-def is_point_in_rect(point_x, point_y, rect_x, rect_y, rect_w, rect_h):
-    return (rect_x < point_x < rect_x + rect_w) and (rect_y < point_y < rect_y + rect_h)
-
-def sprite_pos(sprite: arcade.Sprite) -> gmath.Vec2:
-    return gmath.Vec2(sprite.center_x, sprite.center_y)
-
-def mul_vec_const(vec: Vec2, const) -> Vec2:
-    return Vec2(vec.x*const, vec.y*const)
 
 
 class GameView(arcade.View):
@@ -42,7 +33,6 @@ class GameView(arcade.View):
         self.camera = None
         self.scene = None
         self.attacks_list = None
-        self.dbg_draw = lambda: ()
 
     def setup(self):
         self.player = Player()
@@ -149,12 +139,14 @@ class GameView(arcade.View):
         self.camera.use()
         self.player_list.draw()
         self.enemies.draw()
+        for enemy in self.enemies:
+            enemy.draw_hp_bar()
+            enemy.draw_effects()
 
         self.draw_hp()
-        self.dbg_draw()
 
     def on_update(self, delta_time):
-        self.process_keychange()
+        self.process_keychange(delta_time)
         self.center_camera_to_player()
         self.physics_engine.update()
         self.setup_animations()
@@ -166,6 +158,18 @@ class GameView(arcade.View):
             print(e, self.player.frames)
 
     def update_enemies(self, delta_time):
+        i = len(self.enemies) - 1
+        while i >= 0:  # TODO use "for"?
+            if self.enemies[i].dead:
+                self.enemies.pop(i)
+            i -= 1
+
+        if len(self.enemies) < 10:  # TODO just for testing purposes here, replace later
+            for _ in range(10 - len(self.enemies)):
+                self.enemies.append(
+                    Enemy(center_x=randint(0, 2000), center_y=randint(0, 2000))
+                )
+
         player_pos = sprite_pos(self.player)
         for enemy in self.enemies:
             camera_x, camera_y = self.camera.position
@@ -190,10 +194,12 @@ class GameView(arcade.View):
                     enemy.center_x += enemy_x_delta * delta_time * enemy.speed
                     enemy.center_y += enemy_y_delta * delta_time * enemy.speed
 
-    def process_keychange(self):
+    def process_keychange(self, delta_time):
         self.player.direction = self.player.direction.normalize()
-        self.player.change_x, self.player.change_y = mul_vec_const(self.player.direction, self.player.speed)
-        
+        self.player.change_x, self.player.change_y = mul_vec_const(
+            self.player.direction, self.player.speed
+        )
+
         if self.up_pressed and not self.down_pressed:
             self.player.direction.y = 1
         elif self.down_pressed and not self.up_pressed:
@@ -210,31 +216,21 @@ class GameView(arcade.View):
 
         if self.space_pressed:
             player_pos = sprite_pos(self.player)
-            enemy2attack = min(
-                self.enemies,
-                key=lambda enemy: sprite_pos(enemy).distance(
-                    player_pos
-                ),
-            )
-
-            enemy_pos = sprite_pos(enemy2attack)
-            attack_end_pos = player_pos + mul_vec_const(self.player.direction, self.player.attack_radius) 
-
-            c = attack_end_pos.distance(enemy_pos)
-            a = attack_end_pos.distance(player_pos)
-            b = enemy_pos.distance(player_pos)
-            def dbg_draw():
-                arcade.draw_point(player_pos.x, player_pos.y, arcade.color.RED, 10)
-                arcade.draw_point(enemy_pos.x, enemy_pos.y, arcade.color.RED, 10)
-                arcade.draw_point(attack_end_pos.x, attack_end_pos.y, arcade.color.RED, 10)
-            self.dbg_draw = dbg_draw
-            player_enemy_angle = math.acos((a**2 + b**2 - c**2)/(2*a*b))
-            print(player_enemy_angle)
-            if player_enemy_angle < math.pi / 2 and b < self.player.attack_radius:
-                enemy2attack.visible = False
-
-            # player.attack(enemy2attack)
-
+            for enemy in self.enemies:
+                enemy_pos = sprite_pos(enemy)
+                attack_end_pos = player_pos + mul_vec_const(
+                    self.player.direction, self.player.attack_range
+                )
+                c = attack_end_pos.distance(enemy_pos)
+                a = attack_end_pos.distance(player_pos)
+                b = enemy_pos.distance(player_pos)
+                player_enemy_angle = math.acos((a**2 + b**2 - c**2) / (2 * a * b))
+                if player_enemy_angle < math.pi / 2 and b < self.player.attack_range:
+                    if self.player.is_attacking:
+                        self.player.update_attack(delta_time)
+                    else:
+                        self.player.start_attacking()
+                        enemy.damage(self.player.attack_damage)
 
     def on_key_press(self, symbol: int, modifiers: int):
         if symbol == arcade.key.W:
