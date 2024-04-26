@@ -119,6 +119,7 @@ class GameView(arcade.View):
             self.setup()
             self.has_been_setup = True
         arcade.set_background_color(arcade.color.TEA_GREEN)
+        self.player.update_stats()
 
     def draw_bar(
         self,
@@ -211,6 +212,7 @@ class GameView(arcade.View):
         self.physics_engine.update()
         self.setup_animations()
         self.update_enemies(delta_time)
+        self.player.update()
         try:
             if self.player.frames:
                 self.player_list.update_animation()
@@ -225,8 +227,8 @@ class GameView(arcade.View):
                 self.player.xp += 50
             i -= 1
 
-        if len(self.enemies) < 10:  # TODO just for testing purposes here, replace later
-            for _ in range(10 - len(self.enemies)):
+        if len(self.enemies) < 100:  # TODO just for testing purposes here, replace later
+            for _ in range(100 - len(self.enemies)):
                 self.enemies.append(
                     Enemy(center_x=randint(0, 2000), center_y=randint(0, 2000))
                 )

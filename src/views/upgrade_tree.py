@@ -44,10 +44,19 @@ class Upgrade:
 
 
 UPGRADES = [
-    Upgrade(1, "Add 1 HP", "helmet_01a.png", (LEFTOF, 0)),
-    Upgrade(2, "Add 1 HP", "helmet_01a.png", (RIGHTOF | TOPOF, 0)),
-    Upgrade(3, "Add 1 HP", "helmet_01a.png", (LEFTOF | TOPOF, 0)),
-    Upgrade(4, "Add 1 HP", "helmet_01a.png", (LEFTOF | BOTOF, 0)),
+    # Left - HP
+    Upgrade(1, "Add 100 HP", "helmet_01a.png", (LEFTOF, 0), cost=100, hp_buff=100),
+    Upgrade(2, "Add 300 HP", "helmet_01b.png", (LEFTOF, 1), cost=200, hp_buff=300, depends_on=[1]),
+    Upgrade(3, "Add 500 HP", "helmet_01c.png", (LEFTOF, 2), cost=300, hp_buff=500, depends_on=[2]),
+    Upgrade(4, "Add 1000 HP", "helmet_01d.png", (LEFTOF, 3), cost=500, hp_buff=1000, depends_on=[3]),
+    Upgrade(5, "Add 2000 HP", "helmet_01e.png", (LEFTOF, 4), cost=900, hp_buff=2000, depends_on=[4]),
+
+    # Top - Heal
+    Upgrade(101, "Heal 1 hp/sec more", "hat_01a.png", (TOPOF, 0), cost=200, heal_buff=1),
+    Upgrade(102, "Heal 2 hp/sec more", "hat_01b.png", (TOPOF, 101), cost=350, heal_buff=2, depends_on=[101]),
+    Upgrade(103, "Heal 4 hp/sec more", "hat_01c.png", (TOPOF, 102), cost=600, heal_buff=4, depends_on=[102]),
+    Upgrade(104, "Heal 8 hp/sec more", "hat_01d.png", (TOPOF, 103), cost=1000, heal_buff=8, depends_on=[103]),
+    Upgrade(105, "Heal 14 hp/sec more", "hat_01e.png", (TOPOF, 104), cost=1400, heal_buff=14, depends_on=[104]),
 ]
 # Upgrades with lower id cannot reference ones with bigger
 UPGRADES.sort(key=lambda upgrade: upgrade.idf)
@@ -136,7 +145,7 @@ class UpgradeTreeView(arcade.View):
                 ref_y + self.upgrade_circle_radius * direction.y,
                 upgrade_x - self.upgrade_circle_radius * direction.x,
                 upgrade_y - self.upgrade_circle_radius * direction.y,
-                UPGRADE_CIRCLE_COLOR_UPGRADED,
+                UPGRADE_CIRCLE_COLOR_UPGRADED if ref_id in self.game_view.player.acquired_upgrades_idf or ref_id == 0 else UPGRADE_CIRCLE_COLOR_NOT_UPGRADED,
                 line_width=10,
             )
 
@@ -249,7 +258,7 @@ class UpgradeTreeView(arcade.View):
             return False
         if upgrade.depends_on is not None:
             for dep_upgrade_idf in upgrade.depends_on:
-                if dep_upgrade_idf in self.game_view.player.acquired_upgrades_idf:
+                if dep_upgrade_idf not in self.game_view.player.acquired_upgrades_idf:
                     return False
         return True
 
@@ -259,6 +268,7 @@ class UpgradeTreeView(arcade.View):
         upgrade = IDF2UPGRADE[idf]
         self.game_view.player.xp -= upgrade.cost
         self.game_view.player.acquired_upgrades_idf.add(idf)
+        self.game_view.player.update_stats()
 
     def on_mouse_press(self, x, y, button, key_modifiers):
         if button == arcade.MOUSE_BUTTON_LEFT:
