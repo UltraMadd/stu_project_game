@@ -8,18 +8,33 @@ from pyglet.math import Vec2
 
 from entities.player import Player
 from entities.enemy import Enemy
-from utils import mul_vec_const, is_point_in_rect, sprite_pos
+from utils import get_color_from_gradient, mul_vec_const, is_point_in_rect, sprite_pos
+from views.upgrade_tree import UpgradeTreeView
 
 
 HP_BAR_WIDTH = 500
 HP_BAR_HEIGHT = 50
-HP_TEXT_SIZE = 20
+HP_BAR_TEXT_SIZE = 20
+
+XP_BAR_WIDTH = 300
+XP_BAR_HEIGHT = 30
+XP_BAR_TEXT_SIZE = 15
+
+BARS_SPACING = 10
+BARS_BACKGROUND_COLOR = arcade.color.DARK_GREEN
+
+HP_BAR_HEALTH_GRADIENT = [
+    arcade.color.PASTEL_RED,
+    arcade.color.PASTEL_GREEN,
+    arcade.color.PASTEL_GREEN,
+]
 
 
 class GameView(arcade.View):
     def __init__(self):
         super().__init__()
-        self.player_list = arcade.SpriteList()
+        self.player_list = None
+        self.enemy_list = None
         self.scene = None
         self.player = None
         self.up_pressed = False
@@ -32,10 +47,12 @@ class GameView(arcade.View):
         self.physics_engine = None
         self.camera = None
         self.scene = None
-        self.enemies = arcade.SpriteList()
         self.attacks_list = None
+        self.has_been_setup = False
 
     def setup(self):
+        self.player_list = arcade.SpriteList()
+        self.enemies = arcade.SpriteList()
         self.player = Player()
         self.player.center_x = 2000
         self.player.center_y = 2000
@@ -98,16 +115,28 @@ class GameView(arcade.View):
         self.camera.move_to(player_centered)
 
     def on_show_view(self):
-        self.setup()
+        if not self.has_been_setup:
+            self.setup()
+            self.has_been_setup = True
         arcade.set_background_color(arcade.color.TEA_GREEN)
 
-    def draw_bar(self, center_x, center_y, width, height, value, max_value, indicator_color, background_color, outline_color):
+    def draw_bar(
+        self,
+        center_x,
+        center_y,
+        width,
+        height,
+        value,
+        max_value,
+        indicator_color,
+        background_color,
+        outline_color,
+        text_size,
+    ):
         arcade.draw_rectangle_filled(
             center_x, center_y, width, height, background_color
         )
-        arcade.draw_rectangle_outline(
-            center_x, center_y, width, height, outline_color
-        )
+        arcade.draw_rectangle_outline(center_x, center_y, width, height, outline_color)
 
         indicator_width = int(width * value / max_value)
         arcade.draw_rectangle_filled(
@@ -121,23 +150,46 @@ class GameView(arcade.View):
         arcade.draw_text(
             f"{value} / {max_value}",
             center_x,
-            center_y - HP_TEXT_SIZE // 2,
+            center_y - text_size // 2,
             arcade.color.WHITE,
-            HP_TEXT_SIZE,
+            text_size,
             anchor_x="center",
+            bold=True,
         )
 
     def draw_bars(self):
+        left_margin = HP_BAR_HEIGHT
+
+        hp_bar_y = self.camera.position.y + HP_BAR_HEIGHT
+
         self.draw_bar(
-            self.camera.position.x + self.camera.viewport_width // 2,
-            self.camera.position.y + HP_BAR_HEIGHT,
+            self.camera.position.x + HP_BAR_WIDTH // 2 + left_margin,
+            hp_bar_y,
             HP_BAR_WIDTH,
             HP_BAR_HEIGHT,
             self.player.hitpoints,
             self.player.max_hitpoints,
-            arcade.color.PASTEL_GREEN,
-            arcade.color.DARK_GREEN,
+            get_color_from_gradient(
+                HP_BAR_HEALTH_GRADIENT, self.player.hitpoints, self.player.max_hitpoints
+            ),
+            BARS_BACKGROUND_COLOR,
             arcade.color.BLACK,
+            HP_BAR_TEXT_SIZE,
+        )
+
+        xp_bar_y = hp_bar_y + XP_BAR_HEIGHT + HP_BAR_HEIGHT // 2
+
+        self.draw_bar(
+            self.camera.position.x + XP_BAR_WIDTH // 2 + left_margin,
+            xp_bar_y,
+            XP_BAR_WIDTH,
+            XP_BAR_HEIGHT,
+            self.player.xp,
+            self.player.max_xp,
+            arcade.color.SAPPHIRE_BLUE,
+            BARS_BACKGROUND_COLOR,
+            arcade.color.BLACK,
+            XP_BAR_TEXT_SIZE,
         )
 
     def on_draw(self):
@@ -170,6 +222,7 @@ class GameView(arcade.View):
         while i >= 0:  # TODO use "for"?
             if self.enemies[i].dead:
                 self.enemies.pop(i)
+                self.player.xp += 50
             i -= 1
 
         if len(self.enemies) < 10:  # TODO just for testing purposes here, replace later
@@ -251,6 +304,8 @@ class GameView(arcade.View):
             self.right_pressed = True
         elif symbol == arcade.key.SPACE:
             self.space_pressed = True
+        elif symbol == arcade.key.E:
+            self.window.show_view(UpgradeTreeView(self))
 
     def on_key_release(self, symbol: int, modifiers: int):
         if symbol == arcade.key.W:
@@ -263,3 +318,11 @@ class GameView(arcade.View):
             self.right_pressed = False
         elif symbol == arcade.key.SPACE:
             self.space_pressed = False
+    
+    def release_all(self):
+        self.up_pressed = False
+        self.down_pressed = False
+        self.left_pressed = False
+        self.right_pressed = False
+        self.space_pressed = False
+

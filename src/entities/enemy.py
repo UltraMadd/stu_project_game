@@ -72,4 +72,3 @@ class Enemy(Entity):
             pass
         else:
             self.is_attacking = False
-
