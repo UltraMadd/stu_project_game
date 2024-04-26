@@ -19,7 +19,7 @@ HP_TEXT_SIZE = 20
 class GameView(arcade.View):
     def __init__(self):
         super().__init__()
-        self.player_list = None
+        self.player_list = arcade.SpriteList()
         self.scene = None
         self.player = None
         self.up_pressed = False
@@ -32,11 +32,11 @@ class GameView(arcade.View):
         self.physics_engine = None
         self.camera = None
         self.scene = None
+        self.enemies = arcade.SpriteList()
         self.attacks_list = None
 
     def setup(self):
         self.player = Player()
-        self.player_list = arcade.SpriteList()
         self.player.center_x = 2000
         self.player.center_y = 2000
         self.attacks_list = arcade.SpriteList()
@@ -48,7 +48,6 @@ class GameView(arcade.View):
         self.setup_animations()
         self.setup_physics()
 
-        self.enemies = arcade.SpriteList()
         self.enemies.append(Enemy(center_x=1500, center_y=1500))
 
     def load_player_animation_frames(self, all_frames: str):
@@ -102,35 +101,43 @@ class GameView(arcade.View):
         self.setup()
         arcade.set_background_color(arcade.color.TEA_GREEN)
 
-    def draw_hp(self):
-        centx = self.camera.position.x + self.camera.viewport_width // 2
-        centy = self.camera.position.y + HP_BAR_HEIGHT
-
+    def draw_bar(self, center_x, center_y, width, height, value, max_value, indicator_color, background_color, outline_color):
         arcade.draw_rectangle_filled(
-            centx, centy, HP_BAR_WIDTH, HP_BAR_HEIGHT, arcade.color.DARK_GREEN
+            center_x, center_y, width, height, background_color
         )
         arcade.draw_rectangle_outline(
-            centx, centy, HP_BAR_WIDTH, HP_BAR_HEIGHT, arcade.color.BLACK
+            center_x, center_y, width, height, outline_color
         )
 
-        hp_bar_indicator_width = int(
-            HP_BAR_WIDTH * self.player.hitpoints / self.player.max_hitpoints
-        )
-        arcade.draw_texture_rectangle(
-            centx + (hp_bar_indicator_width - HP_BAR_WIDTH) / 2,
-            centy,
-            hp_bar_indicator_width,
-            HP_BAR_HEIGHT,
-            arcade.load_texture(abspath(join("textures", "img.png"))),
+        indicator_width = int(width * value / max_value)
+        arcade.draw_rectangle_filled(
+            center_x + (indicator_width - width) / 2,
+            center_y,
+            indicator_width,
+            height,
+            indicator_color,
         )
 
         arcade.draw_text(
-            f"{self.player.hitpoints} / {self.player.max_hitpoints}",
-            centx,
-            centy - HP_TEXT_SIZE // 2,
+            f"{value} / {max_value}",
+            center_x,
+            center_y - HP_TEXT_SIZE // 2,
             arcade.color.WHITE,
             HP_TEXT_SIZE,
             anchor_x="center",
+        )
+
+    def draw_bars(self):
+        self.draw_bar(
+            self.camera.position.x + self.camera.viewport_width // 2,
+            self.camera.position.y + HP_BAR_HEIGHT,
+            HP_BAR_WIDTH,
+            HP_BAR_HEIGHT,
+            self.player.hitpoints,
+            self.player.max_hitpoints,
+            arcade.color.PASTEL_GREEN,
+            arcade.color.DARK_GREEN,
+            arcade.color.BLACK,
         )
 
     def on_draw(self):
@@ -143,7 +150,8 @@ class GameView(arcade.View):
             enemy.draw_hp_bar()
             enemy.draw_effects()
 
-        self.draw_hp()
+        # self.draw_hp()
+        self.draw_bars()
 
     def on_update(self, delta_time):
         self.process_keychange(delta_time)
