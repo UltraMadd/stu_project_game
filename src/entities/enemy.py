@@ -42,6 +42,7 @@ class Enemy(Entity):
         self.set_hit_box(self.texture.hit_box_points)
         self.center_x = center_x
         self.center_y = center_y
+        self.kill_xp_reward = 40 # TODO customizable
 
     def start_attacking(self, target):
         self.is_attacking = True

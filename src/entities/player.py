@@ -8,6 +8,9 @@ from entities.entity import Entity
 from views.upgrade_tree import IDF2UPGRADE
 
 
+LVL_GROWTH = 1.6
+
+
 class Player(Entity, arcade.AnimatedTimeBasedSprite):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,7 +27,8 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
         self.is_attacking = False
         self.attacking_timer = 0
         self.xp = 1000
-        self.max_xp = 1000
+        self.max_xp = 100
+        self.points = 0
         self.heal_speed = 0
         self.acquired_upgrades_idf = set()
         self.last_heal = time()
@@ -48,10 +52,23 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
     def update_stats(self):
         self.max_hitpoints = 100
         self.heal_speed = 0
+        self.attack_damage = 10
+        damage_mult = 1
         for idf in self.acquired_upgrades_idf:
             upgrade = IDF2UPGRADE[idf]
             if upgrade.hp_buff is not None:
                 self.max_hitpoints += upgrade.hp_buff
             if upgrade.heal_buff is not None:
                 self.heal_speed += upgrade.heal_buff
+            if upgrade.damage_buff is not None:
+                damage_mult *= upgrade.damage_buff
+        self.attack_damage *= damage_mult
+
+    def gain_xp(self, amount: int):
+        self.xp += amount
+        while self.xp >= self.max_xp:
+            self.xp -= self.max_xp
+            self.points += 1
+            self.max_xp *= LVL_GROWTH
+            self.max_xp = int(self.max_xp)
 

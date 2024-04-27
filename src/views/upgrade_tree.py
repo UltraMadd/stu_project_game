@@ -30,33 +30,114 @@ TOPOF = LEFTOF << 3
 @dataclass
 class Upgrade:
     idf: int
-    name: str
+    _name: str
     icon_fname: str
     position: Tuple[int, int]
-    cost: int = 100
+    cost: int
     hp_buff: Optional[int] = None
     heal_buff: Optional[int] = None
+    damage_buff: Optional[int] = None
+    iq_buff: Optional[int] = None
     depends_on: Optional[List[int]] = None
     icon_res: str = "32x32"
 
     def get_icon_path(self):
         return abspath(join("textures", "icons", self.icon_res, self.icon_fname))
 
+    @property
+    def name(self) -> str:
+        return self._name.format(hp_buff=self.hp_buff, heal_buff=self.heal_buff, damage_buff=self.damage_buff, iq_buff=self.iq_buff)
+
+
+HEAL_MORE = "Heal {heal_buff} hp/sec more"
+ADD_HP = "Add {hp_buff} more HP"
+DAMAGE_MORE = "Damage {damage_buff}% more"
 
 UPGRADES = [
     # Left - HP
-    Upgrade(1, "Add 100 HP", "helmet_01a.png", (LEFTOF, 0), cost=100, hp_buff=100),
-    Upgrade(2, "Add 300 HP", "helmet_01b.png", (LEFTOF, 1), cost=200, hp_buff=300, depends_on=[1]),
-    Upgrade(3, "Add 500 HP", "helmet_01c.png", (LEFTOF, 2), cost=300, hp_buff=500, depends_on=[2]),
-    Upgrade(4, "Add 1000 HP", "helmet_01d.png", (LEFTOF, 3), cost=500, hp_buff=1000, depends_on=[3]),
-    Upgrade(5, "Add 2000 HP", "helmet_01e.png", (LEFTOF, 4), cost=900, hp_buff=2000, depends_on=[4]),
-
+    Upgrade(1, ADD_HP, "helmet_01a.png", (LEFTOF, 0), cost=1, hp_buff=100),
+    Upgrade(
+        2,
+        ADD_HP,
+        "helmet_01b.png",
+        (LEFTOF, 1),
+        cost=1,
+        hp_buff=300,
+        depends_on=[1],
+    ),
+    Upgrade(
+        3,
+        ADD_HP,
+        "helmet_01c.png",
+        (LEFTOF, 2),
+        cost=1,
+        hp_buff=500,
+        depends_on=[2],
+    ),
+    Upgrade(
+        4,
+        ADD_HP,
+        "helmet_01d.png",
+        (LEFTOF, 3),
+        cost=1,
+        hp_buff=1000,
+        depends_on=[3],
+    ),
+    Upgrade(
+        5,
+        ADD_HP,
+        "helmet_01e.png",
+        (LEFTOF, 4),
+        cost=1,
+        hp_buff=2000,
+        depends_on=[4],
+    ),
     # Top - Heal
-    Upgrade(101, "Heal 1 hp/sec more", "hat_01a.png", (TOPOF, 0), cost=200, heal_buff=1),
-    Upgrade(102, "Heal 2 hp/sec more", "hat_01b.png", (TOPOF, 101), cost=350, heal_buff=2, depends_on=[101]),
-    Upgrade(103, "Heal 4 hp/sec more", "hat_01c.png", (TOPOF, 102), cost=600, heal_buff=4, depends_on=[102]),
-    Upgrade(104, "Heal 8 hp/sec more", "hat_01d.png", (TOPOF, 103), cost=1000, heal_buff=8, depends_on=[103]),
-    Upgrade(105, "Heal 14 hp/sec more", "hat_01e.png", (TOPOF, 104), cost=1400, heal_buff=14, depends_on=[104]),
+    Upgrade(
+        101, HEAL_MORE, "hat_01a.png", (TOPOF, 0), cost=1, heal_buff=1
+    ),
+    Upgrade(
+        102,
+        HEAL_MORE,
+        "hat_01b.png",
+        (TOPOF, 101),
+        cost=1,
+        heal_buff=2,
+        depends_on=[101],
+    ),
+    Upgrade(
+        103,
+        HEAL_MORE,
+        "hat_01c.png",
+        (TOPOF, 102),
+        cost=1,
+        heal_buff=4,
+        depends_on=[102],
+    ),
+    Upgrade(
+        104,
+        HEAL_MORE,
+        "hat_01d.png",
+        (TOPOF, 103),
+        cost=1,
+        heal_buff=8,
+        depends_on=[103],
+    ),
+    Upgrade(
+        105,
+        HEAL_MORE,
+        "hat_01e.png",
+        (TOPOF, 104),
+        cost=1,
+        heal_buff=14,
+        depends_on=[104],
+    ),
+
+    # Right - damage
+    Upgrade(201, DAMAGE_MORE, "sword_01a.png", (RIGHTOF, 0), cost=1, damage_buff=2)
+
+    # Bottom - iq
+
 ]
 # Upgrades with lower id cannot reference ones with bigger
 UPGRADES.sort(key=lambda upgrade: upgrade.idf)
@@ -145,7 +226,12 @@ class UpgradeTreeView(arcade.View):
                 ref_y + self.upgrade_circle_radius * direction.y,
                 upgrade_x - self.upgrade_circle_radius * direction.x,
                 upgrade_y - self.upgrade_circle_radius * direction.y,
-                UPGRADE_CIRCLE_COLOR_UPGRADED if ref_id in self.game_view.player.acquired_upgrades_idf or ref_id == 0 else UPGRADE_CIRCLE_COLOR_NOT_UPGRADED,
+                (
+                    UPGRADE_CIRCLE_COLOR_UPGRADED
+                    if ref_id in self.game_view.player.acquired_upgrades_idf
+                    or ref_id == 0
+                    else UPGRADE_CIRCLE_COLOR_NOT_UPGRADED
+                ),
                 line_width=10,
             )
 
@@ -222,15 +308,15 @@ class UpgradeTreeView(arcade.View):
 
         can_buy = self.can_buy(self.opened_idf)
         reason = ""
-        if self.game_view.player.xp < upgrade.cost:
-            reason = "Not enough XP."
+        if self.game_view.player.points < upgrade.cost:
+            reason = "Not enough Points."
         elif self.opened_idf in self.game_view.player.acquired_upgrades_idf:
             reason = "Already acquired."
         else:
             reason = "Dependencies not met."
 
         arcade.draw_text(
-            f"{upgrade.cost} XP",
+            f"{upgrade.cost} Points",
             upgrade_opened_position.x,
             self.camera.position.y + UPGRADE_OPENED_UPGRADE_BUTTON2BOT_DISTANCE,
             font_size=30,
@@ -254,7 +340,7 @@ class UpgradeTreeView(arcade.View):
         if idf in self.game_view.player.acquired_upgrades_idf:
             return False
         upgrade = IDF2UPGRADE[idf]
-        if self.game_view.player.xp < upgrade.cost:
+        if self.game_view.player.points < upgrade.cost:
             return False
         if upgrade.depends_on is not None:
             for dep_upgrade_idf in upgrade.depends_on:
@@ -266,7 +352,7 @@ class UpgradeTreeView(arcade.View):
         if not self.can_buy(idf):
             return
         upgrade = IDF2UPGRADE[idf]
-        self.game_view.player.xp -= upgrade.cost
+        self.game_view.player.points -= upgrade.cost
         self.game_view.player.acquired_upgrades_idf.add(idf)
         self.game_view.player.update_stats()
 

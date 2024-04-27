@@ -28,6 +28,7 @@ HP_BAR_HEALTH_GRADIENT = [
     arcade.color.PASTEL_GREEN,
     arcade.color.PASTEL_GREEN,
 ]
+CHECK_PERF = False
 
 
 class GameView(arcade.View):
@@ -59,11 +60,17 @@ class GameView(arcade.View):
         self.attacks_list = arcade.SpriteList()
 
         self.tiled_map = arcade.load_tilemap(abspath(join("map", "map1.tmx")), 1)
+        target = self.tiled_map
+        for attr in dir(target):
+            ... #print(attr, getattr(target, attr))
         self.scene = arcade.Scene.from_tilemap(self.tiled_map)
         self.camera = arcade.Camera(self.window.width, self.window.height)
         self.scene.add_sprite("player", self.player)
         self.setup_animations()
         self.setup_physics()
+
+        if CHECK_PERF:
+            arcade.enable_timings()
 
         self.enemies.append(Enemy(center_x=1500, center_y=1500))
 
@@ -193,6 +200,16 @@ class GameView(arcade.View):
             XP_BAR_TEXT_SIZE,
         )
 
+    def draw_fps(self):
+        arcade.draw_text(
+            str(arcade.get_fps()),
+            self.player.center_x + 100,
+            self.player.center_y + 100,
+            arcade.color.WHITE,
+            20,
+            bold=True,
+        )
+
     def on_draw(self):
         self.clear()
         self.scene.draw()
@@ -200,11 +217,21 @@ class GameView(arcade.View):
         self.player_list.draw()
         self.enemies.draw()
         for enemy in self.enemies:
-            enemy.draw_hp_bar()
-            enemy.draw_effects()
+            if is_point_in_rect(
+                enemy.center_x,
+                enemy.center_y,
+                self.camera.position.x,
+                self.camera.position.y,
+                self.camera.viewport_width,
+                self.camera.viewport_height,
+            ):
+                enemy.draw_hp_bar()
+                enemy.draw_effects()
 
         # self.draw_hp()
         self.draw_bars()
+        if CHECK_PERF:
+            self.draw_fps()
 
     def on_update(self, delta_time):
         self.process_keychange(delta_time)
@@ -223,12 +250,12 @@ class GameView(arcade.View):
         i = len(self.enemies) - 1
         while i >= 0:  # TODO use "for"?
             if self.enemies[i].dead:
+                self.player.gain_xp(self.enemies[i].kill_xp_reward)
                 self.enemies.pop(i)
-                self.player.xp += 50
             i -= 1
 
-        if len(self.enemies) < 100:  # TODO just for testing purposes here, replace later
-            for _ in range(100 - len(self.enemies)):
+        if len(self.enemies) < 10:  # TODO just for testing purposes here, replace later
+            for _ in range(10 - len(self.enemies)):
                 self.enemies.append(
                     Enemy(center_x=randint(0, 2000), center_y=randint(0, 2000))
                 )
@@ -308,6 +335,8 @@ class GameView(arcade.View):
             self.space_pressed = True
         elif symbol == arcade.key.E:
             self.window.show_view(UpgradeTreeView(self))
+        elif symbol == arcade.key.P:
+            print(self.player.center_x, self.player.center_y)
 
     def on_key_release(self, symbol: int, modifiers: int):
         if symbol == arcade.key.W:
@@ -320,11 +349,10 @@ class GameView(arcade.View):
             self.right_pressed = False
         elif symbol == arcade.key.SPACE:
             self.space_pressed = False
-    
+
     def release_all(self):
         self.up_pressed = False
         self.down_pressed = False
         self.left_pressed = False
         self.right_pressed = False
         self.space_pressed = False
-
