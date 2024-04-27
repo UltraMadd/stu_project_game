@@ -46,7 +46,7 @@ class Entity(arcade.Sprite):
                 to_pop += 1
             else:
                 arcade.draw_text(
-                    f"{-damage}",
+                    f"{-damage:.1f}",
                     pos_x,
                     new_y,
                     anchor_y="center",
@@ -78,3 +78,7 @@ class Entity(arcade.Sprite):
                 HP_BAR_HEALTH_GRADIENT, self.hitpoints, self.max_hitpoints
             ),
         )
+
+
+# TODO Some of that logic is specific only to enemy?
+

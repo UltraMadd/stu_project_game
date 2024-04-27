@@ -34,11 +34,13 @@ class Upgrade:
     icon_fname: str
     position: Tuple[int, int]
     cost: int
-    hp_buff: Optional[int] = None
-    heal_buff: Optional[int] = None
-    damage_buff: Optional[int] = None
-    iq_buff: Optional[int] = None
-    depends_on: Optional[List[int]] = None
+    hp_buff: int = 0
+    heal_buff: int = 0
+    damage_buff: float = 0
+    damage_add: int = 0
+    attack_speed_buff: float = 0
+    iq_buff: int = 0
+    depends_on: Tuple[int, ...] = ()
     icon_res: str = "32x32"
 
     def get_icon_path(self):
@@ -46,12 +48,21 @@ class Upgrade:
 
     @property
     def name(self) -> str:
-        return self._name.format(hp_buff=self.hp_buff, heal_buff=self.heal_buff, damage_buff=self.damage_buff, iq_buff=self.iq_buff)
+        return self._name.format(
+            hp_buff=self.hp_buff,
+            heal_buff=self.heal_buff,
+            damage_buff=round((self.damage_buff - 1) * 100, 1),
+            iq_buff=self.iq_buff,
+            damage_add=self.damage_add,
+            attack_speed_buff=round((self.attack_speed_buff - 1) * 100, 1),
+        )
 
 
 HEAL_MORE = "Heal {heal_buff} hp/sec more"
 ADD_HP = "Add {hp_buff} more HP"
 DAMAGE_MORE = "Damage {damage_buff}% more"
+ADD_DAMAGE = "Add {damage_add} damage"
+ATTACK_SPEED_MORE = "{attack_speed_buff}% more attack speed"
 
 UPGRADES = [
     # Left - HP
@@ -63,7 +74,7 @@ UPGRADES = [
         (LEFTOF, 1),
         cost=1,
         hp_buff=300,
-        depends_on=[1],
+        depends_on=(1,),
     ),
     Upgrade(
         3,
@@ -72,7 +83,7 @@ UPGRADES = [
         (LEFTOF, 2),
         cost=1,
         hp_buff=500,
-        depends_on=[2],
+        depends_on=(2,),
     ),
     Upgrade(
         4,
@@ -81,7 +92,7 @@ UPGRADES = [
         (LEFTOF, 3),
         cost=1,
         hp_buff=1000,
-        depends_on=[3],
+        depends_on=(3,),
     ),
     Upgrade(
         5,
@@ -90,12 +101,10 @@ UPGRADES = [
         (LEFTOF, 4),
         cost=1,
         hp_buff=2000,
-        depends_on=[4],
+        depends_on=(4,),
     ),
     # Top - Heal
-    Upgrade(
-        101, HEAL_MORE, "hat_01a.png", (TOPOF, 0), cost=1, heal_buff=1
-    ),
+    Upgrade(101, HEAL_MORE, "hat_01a.png", (TOPOF, 0), cost=1, heal_buff=1),
     Upgrade(
         102,
         HEAL_MORE,
@@ -103,7 +112,7 @@ UPGRADES = [
         (TOPOF, 101),
         cost=1,
         heal_buff=2,
-        depends_on=[101],
+        depends_on=(101,),
     ),
     Upgrade(
         103,
@@ -112,7 +121,7 @@ UPGRADES = [
         (TOPOF, 102),
         cost=1,
         heal_buff=4,
-        depends_on=[102],
+        depends_on=(102,),
     ),
     Upgrade(
         104,
@@ -121,7 +130,7 @@ UPGRADES = [
         (TOPOF, 103),
         cost=1,
         heal_buff=8,
-        depends_on=[103],
+        depends_on=(103,),
     ),
     Upgrade(
         105,
@@ -130,14 +139,140 @@ UPGRADES = [
         (TOPOF, 104),
         cost=1,
         heal_buff=14,
-        depends_on=[104],
+        depends_on=(104,),
     ),
-
     # Right - damage
-    Upgrade(201, DAMAGE_MORE, "sword_01a.png", (RIGHTOF, 0), cost=1, damage_buff=2)
-
+    Upgrade(201, DAMAGE_MORE, "sword_03a.png", (RIGHTOF, 0), cost=1, damage_buff=1.20),
+    # Right
+    Upgrade(
+        202,
+        DAMAGE_MORE,
+        "sword_03b.png",
+        (RIGHTOF, 201),
+        cost=2,
+        damage_buff=1.25,
+        depends_on=(201,),
+    ),
+    Upgrade(
+        203,
+        DAMAGE_MORE,
+        "sword_03c.png",
+        (RIGHTOF, 202),
+        cost=2,
+        damage_buff=1.30,
+        depends_on=(202,),
+    ),
+    Upgrade(
+        204,
+        DAMAGE_MORE,
+        "sword_03d.png",
+        (RIGHTOF, 203),
+        cost=3,
+        damage_buff=1.35,
+        depends_on=(203,),
+    ),
+    Upgrade(
+        205,
+        DAMAGE_MORE,
+        "sword_03e.png",
+        (RIGHTOF, 204),
+        cost=4,
+        damage_buff=1.5,
+        depends_on=(204,),
+    ),
+    # Top - Right
+    Upgrade(
+        210,
+        ADD_DAMAGE,
+        "sword_02a.png",
+        (RIGHTOF | TOPOF, 201),
+        cost=2,
+        damage_add=10,
+        depends_on=(201,),
+    ),
+    Upgrade(
+        211,
+        ADD_DAMAGE,
+        "sword_02b.png",
+        (RIGHTOF | TOPOF, 202),
+        cost=2,
+        damage_add=10,
+        depends_on=(210, 202),
+    ),
+    Upgrade(
+        212,
+        ADD_DAMAGE,
+        "sword_02c.png",
+        (RIGHTOF | TOPOF, 203),
+        cost=2,
+        damage_add=20,
+        depends_on=(211, 203),
+    ),
+    Upgrade(
+        213,
+        ADD_DAMAGE,
+        "sword_02d.png",
+        (RIGHTOF | TOPOF, 204),
+        cost=3,
+        damage_add=30,
+        depends_on=(212, 204),
+    ),
+    Upgrade(
+        214,
+        ADD_DAMAGE,
+        "sword_02e.png",
+        (RIGHTOF | TOPOF, 205),
+        cost=4,
+        damage_add=40,
+        depends_on=(213, 205),
+    ),
+    # Bottom - Right
+    Upgrade(
+        220,
+        ATTACK_SPEED_MORE,
+        "sword_01a.png",
+        (RIGHTOF | BOTOF, 201),
+        cost=2,
+        attack_speed_buff=1.1,
+        depends_on=(201,),
+    ),
+    Upgrade(
+        221,
+        ATTACK_SPEED_MORE,
+        "sword_01b.png",
+        (RIGHTOF | BOTOF, 202),
+        cost=2,
+        attack_speed_buff=1.1,
+        depends_on=(220, 202),
+    ),
+    Upgrade(
+        222,
+        ATTACK_SPEED_MORE,
+        "sword_01c.png",
+        (RIGHTOF | BOTOF, 203),
+        cost=2,
+        attack_speed_buff=1.2,
+        depends_on=(221, 203),
+    ),
+    Upgrade(
+        223,
+        ATTACK_SPEED_MORE,
+        "sword_01d.png",
+        (RIGHTOF | BOTOF, 204),
+        cost=3,
+        attack_speed_buff=1.25,
+        depends_on=(222, 204),
+    ),
+    Upgrade(
+        224,
+        ATTACK_SPEED_MORE,
+        "sword_01e.png",
+        (RIGHTOF | BOTOF, 205),
+        cost=4,
+        attack_speed_buff=1.3,
+        depends_on=(223, 205),
+    ),
     # Bottom - iq
-
 ]
 # Upgrades with lower id cannot reference ones with bigger
 UPGRADES.sort(key=lambda upgrade: upgrade.idf)
@@ -234,6 +369,24 @@ class UpgradeTreeView(arcade.View):
                 ),
                 line_width=10,
             )
+
+            for dep_id in upgrade.depends_on:
+                dep_xy = self.upgrade_positions[dep_id]
+                dep_x, dep_y = dep_xy.x, dep_xy.y
+                dep_dir = Vec2(upgrade_x - dep_x, upgrade_y - dep_y).normalize()
+                arcade.draw_line(
+                    dep_x + self.upgrade_circle_radius * dep_dir.x,
+                    dep_y + self.upgrade_circle_radius * dep_dir.y,
+                    upgrade_x - self.upgrade_circle_radius * dep_dir.x,
+                    upgrade_y - self.upgrade_circle_radius * dep_dir.y,
+                    (
+                        UPGRADE_CIRCLE_COLOR_UPGRADED
+                        if dep_id in self.game_view.player.acquired_upgrades_idf
+                        or dep_id == 0
+                        else UPGRADE_CIRCLE_COLOR_NOT_UPGRADED
+                    ),
+                    line_width=10,
+                )
 
             arcade.draw_circle_outline(
                 upgrade_x,

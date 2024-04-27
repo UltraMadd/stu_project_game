@@ -62,7 +62,7 @@ class GameView(arcade.View):
         self.tiled_map = arcade.load_tilemap(abspath(join("map", "map1.tmx")), 1)
         target = self.tiled_map
         for attr in dir(target):
-            ... #print(attr, getattr(target, attr))
+            ...  # print(attr, getattr(target, attr))
         self.scene = arcade.Scene.from_tilemap(self.tiled_map)
         self.camera = arcade.Camera(self.window.width, self.window.height)
         self.scene.add_sprite("player", self.player)
@@ -254,8 +254,10 @@ class GameView(arcade.View):
                 self.enemies.pop(i)
             i -= 1
 
-        if len(self.enemies) < 10:  # TODO just for testing purposes here, replace later
-            for _ in range(10 - len(self.enemies)):
+        if (
+            len(self.enemies) < 100
+        ):  # TODO just for testing purposes here, replace later
+            for _ in range(100 - len(self.enemies)):
                 self.enemies.append(
                     Enemy(center_x=randint(0, 2000), center_y=randint(0, 2000))
                 )
