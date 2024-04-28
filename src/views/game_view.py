@@ -59,7 +59,11 @@ class GameView(arcade.View):
         self.player.center_y = 2000
         self.attacks_list = arcade.SpriteList()
 
-        self.tiled_map = arcade.load_tilemap(abspath(join("map", "map1.tmx")), 1)
+        self.tiled_map = arcade.load_tilemap(
+            abspath(join("map", "map1.tmx")), 1
+        )
+        self.map_width = self.tiled_map.width * self.tiled_map.tile_width
+        self.map_height = self.tiled_map.height * self.tiled_map.tile_height
         target = self.tiled_map
         for attr in dir(target):
             ...  # print(attr, getattr(target, attr))
@@ -105,17 +109,23 @@ class GameView(arcade.View):
     def setup_physics(self):
         self.player_list.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player, walls=[self.scene["water"], self.scene["groundcollision1"]]
+            self.player,
+            walls=[
+                self.scene["water"],
+                self.scene["groundcollision1"],
+            ],
         )
 
     def center_camera_to_player(self):
-        scr_center_x = self.player.center_x - (self.camera.viewport_width / 2)
-        scr_center_y = self.player.center_y - (self.camera.viewport_height / 2)
+        scr_center_x = self.player.center_x - self.camera.viewport_width / 2
+        scr_center_y = self.player.center_y - self.camera.viewport_height / 2
 
-        if scr_center_x < 0:
-            scr_center_x = 0
-        if scr_center_y < 0:
-            scr_center_y = 0
+        scr_center_x = max(
+            min(scr_center_x, self.map_width - self.camera.viewport_width), 0
+        )
+        scr_center_y = max(
+            min(scr_center_y, self.map_height - self.camera.viewport_height), 0
+        )
 
         player_centered = [scr_center_x, scr_center_y]
 

@@ -81,4 +81,3 @@ class Entity(arcade.Sprite):
 
 
 # TODO Some of that logic is specific only to enemy?
-
