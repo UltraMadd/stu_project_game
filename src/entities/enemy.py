@@ -1,7 +1,9 @@
-from entities.entity import Entity
+from os.path import abspath, join
 
 import arcade
 import pyglet.math as gmath
+
+from entities.entity import Entity
 
 
 class EnemyAttack:
@@ -36,8 +38,12 @@ class Enemy(Entity):
         self.attacking_target = None
         self.damaged = False
         self.attacking_timer = 0
+        self.scale = 2
+        self.hit_box_algorithm = "Detailed"
         self.texture = arcade.load_texture(
-            ":resources:images/animated_characters/female_person/femalePerson_idle.png"
+            abspath(join("textures", "enemy", "Enemy 16-2.png")),
+            width=32,
+            height=32,
         )
         self.set_hit_box(self.texture.hit_box_points)
         self.center_x = center_x

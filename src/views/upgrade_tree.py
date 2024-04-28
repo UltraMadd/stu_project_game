@@ -62,7 +62,7 @@ HEAL_MORE = "Heal {heal_buff} hp/sec more"
 ADD_HP = "Add {hp_buff} more HP"
 DAMAGE_MORE = "Damage {damage_buff}% more"
 ADD_DAMAGE = "Add {damage_add} damage"
-ATTACK_SPEED_MORE = "{attack_speed_buff}% more attack speed"
+ATTACK_SPEED_MORE = "Attack {attack_speed_buff}% faster"
 
 UPGRADES = [
     # Left - HP
