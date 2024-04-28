@@ -127,7 +127,7 @@ class GameView(arcade.View):
             min(scr_center_y, self.map_height - self.camera.viewport_height), 0
         )
 
-        player_centered = [scr_center_x, scr_center_y]
+        player_centered = Vec2(scr_center_x, scr_center_y)
 
         self.camera.move_to(player_centered)
 
@@ -158,7 +158,7 @@ class GameView(arcade.View):
 
         indicator_width = int(width * value / max_value)
         arcade.draw_rectangle_filled(
-            center_x + (indicator_width - width) / 2,
+            center_x + (indicator_width - width) // 2,
             center_y,
             indicator_width,
             height,
@@ -210,7 +210,7 @@ class GameView(arcade.View):
             XP_BAR_TEXT_SIZE,
         )
 
-    def draw_fps(self):
+    def _draw_fps(self):
         arcade.draw_text(
             str(arcade.get_fps()),
             self.player.center_x + 100,
@@ -238,10 +238,9 @@ class GameView(arcade.View):
                 enemy.draw_hp_bar()
                 enemy.draw_effects()
 
-        # self.draw_hp()
         self.draw_bars()
         if CHECK_PERF:
-            self.draw_fps()
+            self._draw_fps()
 
     def on_update(self, delta_time):
         self.process_keychange(delta_time)

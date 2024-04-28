@@ -368,7 +368,7 @@ class UpgradeTreeView(arcade.View):
                     else UPGRADE_CIRCLE_COLOR_NOT_UPGRADED
                 ),
                 line_width=10,
-            )
+            )  # TODO Repeats below, is it ok?
 
             for dep_id in upgrade.depends_on:
                 dep_xy = self.upgrade_positions[dep_id]
