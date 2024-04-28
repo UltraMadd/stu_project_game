@@ -3,6 +3,7 @@ from time import time
 
 import arcade
 import pyglet.math as gmath
+from entities.animated import AnimatedSprite, load_default_animated
 
 from entities.entity import Entity
 from utils import get_color_from_gradient
@@ -32,7 +33,7 @@ class EnemyAttack:
         return cls(128)
 
 
-class Enemy(Entity):
+class Enemy(Entity, AnimatedSprite):
     def __init__(
         self,
         scale=0.4,
@@ -51,18 +52,15 @@ class Enemy(Entity):
         self.is_attacking = False
         self.attacking_target = None
         self.damaged = False
+        self.scale = 1.5
         self.attacking_timer = 0
-        self.scale = 2
-        self.hit_box_algorithm = "Detailed"
-        self.texture = arcade.load_texture(
-            abspath(join("textures", "enemy", "Enemy 16-2.png")),
-            width=32,
-            height=32,
-        )
-        self.set_hit_box(self.texture.hit_box_points)
+        self.walking_textures, self.staying_textures = load_default_animated(abspath(join("textures", "enemy", "Enemy 16-2.png")))
         self.center_x = center_x
         self.center_y = center_y
         self.kill_xp_reward = kill_xp_reward
+
+    def update(self):
+        self.update_animation()
 
     def start_attacking(self, target):
         self.is_attacking = True

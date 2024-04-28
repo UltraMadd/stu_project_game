@@ -9,6 +9,7 @@ from pyglet.math import Vec2
 from entities.player import Player
 from entities.enemy import Enemy
 from utils import get_color_from_gradient, mul_vec_const, is_point_in_rect, sprite_pos
+from views.dialog_view import TEST, DialogView
 from views.upgrade_tree import UpgradeTreeView
 
 
@@ -50,10 +51,12 @@ class GameView(arcade.View):
         self.scene = None
         self.attacks_list = None
         self.has_been_setup = False
+        self.npcs = None
 
     def setup(self):
         self.player_list = arcade.SpriteList()
         self.enemies = arcade.SpriteList()
+        self.npcs = arcade.SpriteList()
         self.player = Player()
         self.player.center_x = 2000
         self.player.center_y = 2000
@@ -273,6 +276,7 @@ class GameView(arcade.View):
 
         player_pos = sprite_pos(self.player)
         for enemy in self.enemies:
+            enemy.update()
             camera_x, camera_y = self.camera.position
             camera_w, camera_h = self.camera.viewport_width, self.camera.viewport_height
             enemy_pos = sprite_pos(enemy)
@@ -346,6 +350,8 @@ class GameView(arcade.View):
             self.space_pressed = True
         elif symbol == arcade.key.E:
             self.window.show_view(UpgradeTreeView(self))
+        elif symbol == arcade.key.G:
+            self.window.show_view(DialogView(self, TEST))
         elif symbol == arcade.key.P:
             print(self.player.center_x, self.player.center_y)
 
