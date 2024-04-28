@@ -1,7 +1,22 @@
-from entities.entity import Entity
+from os.path import abspath, join
+from time import time
 
 import arcade
 import pyglet.math as gmath
+
+from entities.entity import Entity
+from utils import get_color_from_gradient
+
+
+HP_BAR_WIDTH = 50
+HP_BAR_HEIGHT = 10
+DAMAGE_EFFECT_TIME_DISPLAY = 2
+
+HP_BAR_HEALTH_GRADIENT = [
+    arcade.color.PASTEL_RED,
+    arcade.color.PASTEL_YELLOW,
+    arcade.color.PASTEL_GREEN,
+]
 
 
 class EnemyAttack:
@@ -24,6 +39,7 @@ class Enemy(Entity):
         center_x=0,
         center_y=0,
         speed=128,
+        kill_xp_reward=40,
         attack: EnemyAttack = EnemyAttack.simple(),
         *args,
         **kwargs
@@ -36,12 +52,17 @@ class Enemy(Entity):
         self.attacking_target = None
         self.damaged = False
         self.attacking_timer = 0
+        self.scale = 2
+        self.hit_box_algorithm = "Detailed"
         self.texture = arcade.load_texture(
-            ":resources:images/animated_characters/female_person/femalePerson_idle.png"
+            abspath(join("textures", "enemy", "Enemy 16-2.png")),
+            width=32,
+            height=32,
         )
         self.set_hit_box(self.texture.hit_box_points)
         self.center_x = center_x
         self.center_y = center_y
+        self.kill_xp_reward = kill_xp_reward
 
     def start_attacking(self, target):
         self.is_attacking = True
@@ -72,4 +93,50 @@ class Enemy(Entity):
             pass
         else:
             self.is_attacking = False
+
+    def draw_effects(self):
+        pos_x, pos_y = self.center_x, self.top + HP_BAR_HEIGHT // 2
+        to_pop = 0
+        for damage, when_received in reversed(self.damaged_queue):
+            elapsed = time() - when_received
+            new_y = arcade.lerp(
+                pos_y + HP_BAR_HEIGHT, pos_y + HP_BAR_HEIGHT * 3, elapsed
+            )
+            opacity = int(arcade.lerp(255, 0, elapsed))
+            if opacity <= 0:
+                to_pop += 1
+            else:
+                arcade.draw_text(
+                    f"{-damage:.1f}",
+                    pos_x,
+                    new_y,
+                    anchor_y="center",
+                    bold=True,
+                    color=arcade.color.RED + (opacity,),
+                )
+        for _ in range(to_pop):
+            self.damaged_queue.pop()
+
+    def draw_hp_bar(self):
+        pos_x, pos_y = self.center_x, self.top + HP_BAR_HEIGHT // 2
+
+        arcade.draw_rectangle_filled(
+            pos_x,
+            pos_y,
+            HP_BAR_WIDTH,
+            HP_BAR_HEIGHT,
+            arcade.color.DARK_GREEN,
+        )
+
+        hp_bar_indicator_width = int(HP_BAR_WIDTH * self.hitpoints / self.max_hitpoints)
+
+        arcade.draw_rectangle_filled(
+            pos_x + (hp_bar_indicator_width - HP_BAR_WIDTH) / 2,
+            pos_y,
+            hp_bar_indicator_width,
+            HP_BAR_HEIGHT,
+            get_color_from_gradient(
+                HP_BAR_HEALTH_GRADIENT, self.hitpoints, self.max_hitpoints
+            ),
+        )
 

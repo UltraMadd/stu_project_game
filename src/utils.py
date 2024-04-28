@@ -1,3 +1,5 @@
+from math import ceil
+
 import arcade
 from pyglet.math import Vec2
 
@@ -12,3 +14,7 @@ def sprite_pos(sprite: arcade.Sprite) -> Vec2:
 
 def mul_vec_const(vec: Vec2, const) -> Vec2:
     return Vec2(vec.x * const, vec.y * const)
+
+
+def get_color_from_gradient(gradient, value, max_value):
+    return gradient[ceil(value / max_value * len(gradient)) - 1]
