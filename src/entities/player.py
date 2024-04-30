@@ -1,14 +1,24 @@
+from dataclasses import dataclass
 from os.path import abspath, join
 from time import time
+import math
 
 import arcade
-import pyglet.math as gmath
+from pyglet.math import Vec2
 
 from entities.entity import Entity
+from utils import mul_vec_const
 from views.upgrade_tree import IDF2UPGRADE
 
 
 LVL_GROWTH = 1.2
+
+
+@dataclass
+class Goto:
+    idf: str
+    x: int
+    y: int
 
 
 class Player(Entity, arcade.AnimatedTimeBasedSprite):
@@ -18,7 +28,7 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
         self.speed = 3
         self.attack_range = 100
         self.attack_damage = 10
-        self.direction = gmath.Vec2(1, 1)
+        self.direction = Vec2(1, 1)
         self.texture = arcade.load_texture(
             abspath(join("textures", "player", "walkback1.png"))
         )
@@ -34,6 +44,7 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
         self.attack_time = 0.5
         self.acquired_upgrades_idf = set()
         self.last_heal = time()
+        self.gotos = []
 
     def update(self):
         if time() - self.last_heal >= 1:
@@ -78,3 +89,30 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
             self.points += 1
             self.max_xp *= LVL_GROWTH
             self.max_xp = int(self.max_xp)
+
+    def add_goto(self, goto: Goto):
+        self.gotos.append(goto)
+
+    def remove_goto(self, idf: int) -> bool:
+        index = None
+        for cur_index, goto in enumerate(self.gotos):
+            if goto.idf == idf:
+                index = cur_index
+        if index:
+            self.gotos.pop(index)
+            return True
+        return False
+    
+    def can_attack(self, enemy_pos: Vec2) -> bool:
+        player_pos = Vec2(self.center_x, self.center_y)
+        attack_end_pos = player_pos + mul_vec_const(
+            self.direction, self.attack_range
+        )
+        c = attack_end_pos.distance(enemy_pos)
+        a = attack_end_pos.distance(player_pos)
+        b = enemy_pos.distance(player_pos)
+        player_enemy_angle = math.acos(max(min((a**2 + b**2 - c**2) / (2 * a * b), 1), -1))
+        return player_enemy_angle < math.pi / 2 and b < self.attack_range
+
+
+

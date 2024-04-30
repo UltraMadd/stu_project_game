@@ -18,5 +18,3 @@ class Entity(arcade.Sprite):
         self.damaged_queue.appendleft((amount, time()))
         if self.hitpoints <= 0:
             self.dead = True
-
-

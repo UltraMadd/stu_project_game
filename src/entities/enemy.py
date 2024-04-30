@@ -43,7 +43,7 @@ class Enemy(Entity, AnimatedSprite):
         kill_xp_reward=40,
         attack: EnemyAttack = EnemyAttack.simple(),
         *args,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.scale = scale
@@ -54,7 +54,9 @@ class Enemy(Entity, AnimatedSprite):
         self.damaged = False
         self.scale = 1.5
         self.attacking_timer = 0
-        self.walking_textures, self.staying_textures = load_default_animated(abspath(join("textures", "enemy", "Enemy 16-2.png")))
+        self.walking_textures, self.staying_textures = load_default_animated(
+            abspath(join("textures", "enemy", "Enemy 16-2.png"))
+        )
         self.center_x = center_x
         self.center_y = center_y
         self.kill_xp_reward = kill_xp_reward
@@ -137,4 +139,3 @@ class Enemy(Entity, AnimatedSprite):
                 HP_BAR_HEALTH_GRADIENT, self.hitpoints, self.max_hitpoints
             ),
         )
-
