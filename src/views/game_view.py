@@ -263,7 +263,7 @@ class GameView(arcade.View):
 
     def update_enemies(self, delta_time):
         i = len(self.enemies) - 1
-        while i >= 0:  # TODO use "for"?
+        while i >= 0:  # TODO use "for"
             if self.enemies[i].dead:
                 self.player.gain_xp(self.enemies[i].kill_xp_reward)
                 self.enemies.pop(i)
