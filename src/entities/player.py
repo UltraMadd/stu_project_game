@@ -11,7 +11,7 @@ from utils import mul_vec_const
 from views.upgrade_tree import IDF2UPGRADE
 
 
-LVL_GROWTH = 1.2
+LVL_GROWTH = 1.3
 
 
 @dataclass
@@ -65,7 +65,7 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
     def update_stats(self):
         self.max_hitpoints = 100
         self.heal_speed = 0
-        self.attack_damage = 10
+        self.attack_damage = 100000
         self.attack_speed = 1
         damage_mult = 1
         for idf in self.acquired_upgrades_idf:
@@ -102,17 +102,14 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
             self.gotos.pop(index)
             return True
         return False
-    
+
     def can_attack(self, enemy_pos: Vec2) -> bool:
         player_pos = Vec2(self.center_x, self.center_y)
-        attack_end_pos = player_pos + mul_vec_const(
-            self.direction, self.attack_range
-        )
+        attack_end_pos = player_pos + mul_vec_const(self.direction, self.attack_range)
         c = attack_end_pos.distance(enemy_pos)
         a = attack_end_pos.distance(player_pos)
         b = enemy_pos.distance(player_pos)
-        player_enemy_angle = math.acos(max(min((a**2 + b**2 - c**2) / (2 * a * b), 1), -1))
+        player_enemy_angle = math.acos(
+            max(min((a**2 + b**2 - c**2) / (2 * a * b), 1), -1)
+        )
         return player_enemy_angle < math.pi / 2 and b < self.attack_range
-
-
-

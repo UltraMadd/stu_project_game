@@ -1,13 +1,13 @@
 import arcade
 from pyglet.math import Vec2
 
+from utils import EPS
+
 
 UP = 0
 DOWN = 1
 LEFT = 2
 RIGHT = 3
-
-EPS = 1e-3
 
 
 def reorder(lst):

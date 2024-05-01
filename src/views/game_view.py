@@ -128,7 +128,6 @@ class GameView(arcade.View):
             ],
         )
 
-
     def center_camera_to_player(self, restrict=False):
         scr_center_x = self.player.center_x - self.camera.viewport_width / 2
         scr_center_y = self.player.center_y - self.camera.viewport_height / 2
@@ -189,40 +188,44 @@ class GameView(arcade.View):
             bold=True,
         )
 
-    def draw_bars(self):
+    def draw_bars(self, draw_hp=False, draw_xp=False):
         left_margin = HP_BAR_HEIGHT
 
         hp_bar_y = self.camera.position.y + HP_BAR_HEIGHT
 
-        self.draw_bar(
-            self.camera.position.x + HP_BAR_WIDTH // 2 + left_margin,
-            hp_bar_y,
-            HP_BAR_WIDTH,
-            HP_BAR_HEIGHT,
-            self.player.hitpoints,
-            self.player.max_hitpoints,
-            get_color_from_gradient(
-                HP_BAR_HEALTH_GRADIENT, self.player.hitpoints, self.player.max_hitpoints
-            ),
-            BARS_BACKGROUND_COLOR,
-            arcade.color.BLACK,
-            HP_BAR_TEXT_SIZE,
-        )
+        if draw_hp:
+            self.draw_bar(
+                self.camera.position.x + HP_BAR_WIDTH // 2 + left_margin,
+                hp_bar_y,
+                HP_BAR_WIDTH,
+                HP_BAR_HEIGHT,
+                self.player.hitpoints,
+                self.player.max_hitpoints,
+                get_color_from_gradient(
+                    HP_BAR_HEALTH_GRADIENT,
+                    self.player.hitpoints,
+                    self.player.max_hitpoints,
+                ),
+                BARS_BACKGROUND_COLOR,
+                arcade.color.BLACK,
+                HP_BAR_TEXT_SIZE,
+            )
 
-        xp_bar_y = hp_bar_y + XP_BAR_HEIGHT + HP_BAR_HEIGHT // 2
+        if draw_xp:
+            xp_bar_y = hp_bar_y + XP_BAR_HEIGHT + HP_BAR_HEIGHT // 2
 
-        self.draw_bar(
-            self.camera.position.x + XP_BAR_WIDTH // 2 + left_margin,
-            xp_bar_y,
-            XP_BAR_WIDTH,
-            XP_BAR_HEIGHT,
-            self.player.xp,
-            self.player.max_xp,
-            arcade.color.SAPPHIRE_BLUE,
-            BARS_BACKGROUND_COLOR,
-            arcade.color.BLACK,
-            XP_BAR_TEXT_SIZE,
-        )
+            self.draw_bar(
+                self.camera.position.x + XP_BAR_WIDTH // 2 + left_margin,
+                xp_bar_y,
+                XP_BAR_WIDTH,
+                XP_BAR_HEIGHT,
+                self.player.xp,
+                self.player.max_xp,
+                arcade.color.SAPPHIRE_BLUE,
+                BARS_BACKGROUND_COLOR,
+                arcade.color.BLACK,
+                XP_BAR_TEXT_SIZE,
+            )
 
     def _draw_fps(self):
         arcade.draw_text(
@@ -298,16 +301,18 @@ class GameView(arcade.View):
                 press2talk_text.draw()
 
     def on_draw_universal(self):
-        self.clear()
         self.camera.use()
         self.player_list.draw()
+        self.draw_bars(draw_hp=True)
 
     def on_draw(self):
-        self.on_draw_universal()
-        self.draw_npc()
-        self.draw_gotos()
+        self.clear()
         self.scene.draw()
         self.enemies.draw()
+        self.draw_npc()
+        self.draw_gotos()
+        self.on_draw_universal()
+        self.draw_bars(draw_xp=True)
         for enemy in self.enemies:
             if is_point_in_rect(
                 enemy.center_x,
@@ -320,7 +325,6 @@ class GameView(arcade.View):
                 enemy.draw_hp_bar()
                 enemy.draw_effects()
 
-        self.draw_bars()
         if CHECK_PERF:
             self._draw_fps()
 
@@ -341,7 +345,6 @@ class GameView(arcade.View):
 
     def update_universal(self, delta_time):
         self.process_keychange(delta_time)
-        self.physics_engine.update()
         self.center_camera_to_player()
         self.setup_animations()
         self.player.update()
@@ -356,6 +359,7 @@ class GameView(arcade.View):
         self.update_npc(delta_time)
         self.update_universal(delta_time)
         self.center_camera_to_player(restrict=True)
+        self.physics_engine.update()
 
     def update_enemies(self, delta_time):
         i = len(self.enemies) - 1
@@ -468,7 +472,7 @@ class GameView(arcade.View):
             self.f_pressed = False
 
     def on_key_release(self, symbol: int, modifiers: int):
-        self.on_key_press_universal(symbol, modifiers)
+        self.on_key_release_universal(symbol, modifiers)
 
     def release_all(self):
         self.up_pressed = False

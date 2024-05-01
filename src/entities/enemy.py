@@ -118,6 +118,8 @@ class Enemy(Entity, AnimatedSprite):
             self.damaged_queue.pop()
 
     def draw_hp_bar(self):
+        if self.hitpoints < 0:
+            return
         pos_x, pos_y = self.center_x, self.top + HP_BAR_HEIGHT // 2
 
         arcade.draw_rectangle_filled(
