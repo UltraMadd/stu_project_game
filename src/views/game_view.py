@@ -6,7 +6,7 @@ import arcade
 import pyglet.math as gmath
 from pyglet.math import Vec2
 from entities.animated import DOWN, load_default_animated
-from entities.fighter import FirstBoss
+from entities.fighter import FirstBoss, SecondBoss
 
 from entities.player import Goto, Player
 from entities.enemy import Enemy
@@ -75,8 +75,8 @@ class GameView(arcade.View):
         layer_options = {
             "groundcollision1": {
                 "use_spatial_hash": True,
-                # "hit_box_algorithm": "Detailed",
-                # "hit_box_details": 20,
+                "hit_box_algorithm": "Detailed",
+                "hit_box_details": 20,
             },
         }
         self.tiled_map = arcade.load_tilemap(
@@ -463,7 +463,8 @@ class GameView(arcade.View):
         elif symbol == arcade.key.T:
             self.player.set_position(self.npc[0].center_x, self.npc[0].center_y)
         elif symbol == arcade.key.G:
-            self.window.show_view(FightView(self, FirstBoss()))
+            boss = SecondBoss() # FirstBoss()
+            self.window.show_view(FightView(self, boss))
         elif symbol == arcade.key.E:
             self.window.show_view(UpgradeTreeView(self))
 

@@ -11,6 +11,11 @@ from entities.player import Player
 from utils import EPS, get_random_direction, mul_vec_const, triange_area_3p, sprite_pos
 
 
+def normal_distribution(x):
+    return math.exp(-x**2/2)/math.sqrt(2*math.pi)
+
+
+
 def load_boss_textures(filepath, row, width=96, height=96):
     frames = []
     for col in range(3):
@@ -274,3 +279,87 @@ class FirstBoss(Fighter, arcade.AnimatedTimeBasedSprite):
             ball.speed += ball2center_dist * delta_time
 
             ball.pos += mul_vec_const(ball.dir, ball.speed * delta_time)
+
+
+JUMPING_TIME = 1
+
+
+class SecondBoss(Fighter, arcade.AnimatedTimeBasedSprite):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        frames = load_boss_textures(
+            abspath(join("textures", "boss", "Boss 01.png")), 3
+        )
+        self.frames = frames + [frames[1]]
+        self.max_hitpoints = 10**6
+        self.hitpoints = self.max_hitpoints
+        self.cum_delta_time = 0
+        self.cur_attack_type = None
+        self.display_jump_dust = False
+        self.jump_dust_radius = 0
+        self.jump_dust_pos = Vec2(0, 0)
+        self.jump_start = Vec2(0, 0)
+        self.jump_end = Vec2(0, 0)
+        self.jumping_time = 0
+        self.is_jumping = False
+        self.attack_time = 0
+
+    def setup(self):
+        self.jump_dust_shadertoy = Shadertoy.create_from_file(
+            self.parent_view.window.get_size(), "src/shader/jump_dust.glsl"
+        )
+        self.boss_kill_shadertoy = Shadertoy.create_from_file(
+            self.parent_view.window.get_size(), "src/shader/boss_kill.glsl"
+        )
+
+    def draw_ui(self):
+        if self.display_jump_dust:
+            self.jump_dust_shadertoy.program["pos"] = self.jump_dust_pos - self.parent_view.camera.position
+            self.jump_dust_shadertoy.program["color"] = arcade.color.WHITE_SMOKE
+            self.jump_dust_shadertoy.program["radius"] = self.jumping_time * 50
+            
+            self.jump_dust_shadertoy.render()
+
+    def on_draw(self):
+        self.draw()
+    
+    def on_update(self, delta_time: float = 1 / 60):
+        self.cum_delta_time += delta_time
+        self.update_animation(delta_time)
+
+    def neg_parabolic(self, x):
+        x /= 2
+        return (-(x - JUMPING_TIME) ** 2 + JUMPING_TIME ** 2 / 4) / JUMPING_TIME
+
+    def update_jump(self, delta_time: float):
+        if self.jumping_time > JUMPING_TIME:
+            self.is_jumping = False
+        if not self.is_jumping:
+            return
+        self.jumping_time += delta_time
+        self.center_x = arcade.lerp(self.jump_start.x, self.jump_end.x, self.jumping_time / JUMPING_TIME)
+        self.center_y = arcade.lerp(self.jump_start.y, self.jump_end.y, self.jumping_time / JUMPING_TIME)
+        self.scale = arcade.lerp(1, 2, normal_distribution(self.jumping_time / JUMPING_TIME * 2 - 1))
+
+    def attack(self, player: Player, delta_time: float):
+        self.update_jump(delta_time)
+        if self.cur_attack_type is None:
+            self.cur_attack_type = 0  #randint(0, 1)
+            self.attack_time = 0
+        else:
+            self.attack_time += delta_time
+        if self.cur_attack_type == 0:
+            if self.attack_time > JUMPING_TIME:
+                self.cur_attack_type = None
+                self.display_jump_dust = False
+            if not self.is_jumping:
+                self.jumping_time = 0
+                self.display_jump_dust = True
+                self.jump_dust_pos = sprite_pos(self)
+                self.is_jumping = True
+                self.jump_start = sprite_pos(self)
+                self.jump_end = sprite_pos(player)
+        elif self.cur_attack_type == 1:
+            if self.attack_time > 5:
+                self.cur_attack_type = None
+
