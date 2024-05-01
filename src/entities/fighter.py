@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from os.path import abspath, join
-from random import randint
+from random import randint, random
 import math
 
 import arcade
@@ -40,7 +40,7 @@ class Fighter:
         if self.hitpoints < 0:
             self.is_dead = True
 
-    def attack(self, player: Player):
+    def attack(self, player: Player, delta_time: float):
         raise NotImplementedError()
 
     def setup(self):
@@ -49,6 +49,7 @@ class Fighter:
 
 SHIELD_VISUAL_RADIUS = 45
 SHIELD_VISUAL_RADIUS_VARY = 5
+LIGHTNINGS_TIME_ACTIVE = 6
 
 
 @dataclass
@@ -57,6 +58,7 @@ class Lightning:
     last_damage: float = 0.0
     rot_offset: float = 0.0
     damage: int = 50
+    color: arcade.Color = arcade.color.WHITE
 
 
 @dataclass
@@ -125,6 +127,7 @@ class FirstBoss(Fighter, arcade.AnimatedTimeBasedSprite):
             )
             self.lightning_shadertoy.program["rot"] = lightning.rot
             self.lightning_shadertoy.program["radius"] = 40
+            self.lightning_shadertoy.program["color"] = lightning.color
 
             self.lightning_shadertoy.render()
 
@@ -197,14 +200,19 @@ class FirstBoss(Fighter, arcade.AnimatedTimeBasedSprite):
         if self.cur_attack_type == 0:
             self.activate_shield()
             if not self.lightnings:
-                self.lightnings = [Lightning(0), Lightning(0, rot_offset=math.pi / 2)]
+                self.lightnings = [
+                    Lightning(0),
+                    Lightning(0, rot_offset=math.pi / 2),
+                    Lightning(0, rot_offset=math.pi / 4),
+                    Lightning(0, rot_offset=math.pi * 3 / 4),
+                ]
             for lightning in self.lightnings:
+                time_active = self.attacking_time
                 lightning.rot = (
-                    arcade.lerp(0, 2 * math.pi, self.draw_cum_delta_time) / 5
-                    + lightning.rot_offset
+                    arcade.lerp(0, 2 * math.pi, time_active / 6) + lightning.rot_offset
                 )
                 if (
-                    self.draw_cum_delta_time - lightning.last_damage > 1
+                    self.draw_cum_delta_time - lightning.last_damage > 0.2
                     and triange_area_3p(
                         sprite_pos(player),
                         sprite_pos(self),
@@ -213,14 +221,15 @@ class FirstBoss(Fighter, arcade.AnimatedTimeBasedSprite):
                             self.center_y + math.sin(lightning.rot),
                         ),
                     )
-                    < 5
+                    < 10
                 ):
                     lightning.last_damage = self.draw_cum_delta_time
                     player.damage(lightning.damage)
-            if self.attacking_time > 10:
+            if self.attacking_time > LIGHTNINGS_TIME_ACTIVE:
                 self.lightnings.clear()
                 self.deactivate_shield()
                 self.cur_attack_type = None
+                self.last_lightnings_toggle = 0
         # Give a player time to attack
         elif self.cur_attack_type == 1:
             if self.attacking_time > 3:
@@ -233,7 +242,10 @@ class FirstBoss(Fighter, arcade.AnimatedTimeBasedSprite):
                 self.balls.append(
                     Ball(
                         sprite_pos(self),
-                        (mul_vec_const(get_random_direction(), 1/3) + (sprite_pos(player) - sprite_pos(self)).normalize()).normalize(),
+                        (
+                            mul_vec_const(get_random_direction(), 1 / 3)
+                            + (sprite_pos(player) - sprite_pos(self)).normalize()
+                        ).normalize(),
                         player2boss_dist,
                         randint(5, 15),
                         arcade.color.DARK_ORANGE,
@@ -247,12 +259,14 @@ class FirstBoss(Fighter, arcade.AnimatedTimeBasedSprite):
     def update_balls(self, player: Player, delta_time: float):
         for candidate_pos, candidate_ball in enumerate(reversed(self.balls)):
             if not candidate_ball.visible:
-                self.balls.pop(len(self.balls)-candidate_pos-1)
+                self.balls.pop(len(self.balls) - candidate_pos - 1)
         for ball in self.balls:
             if not ball.visible:
                 continue
-            if ball.pos.distance(sprite_pos(player)) <= ball.radius + min(player.width, player.height):
-                player.damage(50 + int(500/ball.radius))
+            if ball.pos.distance(sprite_pos(player)) <= ball.radius + min(
+                player.width, player.height
+            ):
+                player.damage(50 + int(500 / ball.radius))
                 ball.visible = False
             ball2center_dist = ball.pos.distance(sprite_pos(self))
             if ball2center_dist > self.parent_view.arena_width:
@@ -260,4 +274,3 @@ class FirstBoss(Fighter, arcade.AnimatedTimeBasedSprite):
             ball.speed += ball2center_dist * delta_time
 
             ball.pos += mul_vec_const(ball.dir, ball.speed * delta_time)
-        

@@ -92,8 +92,10 @@ class FightView(arcade.View):
             self.window.show_view(self.prev_view)
             return
         self.fighter.on_update(delta_time)
-        if self.prev_view.space_pressed and not self.fighter.is_dead and self.player.can_attack(
-            sprite_pos(self.fighter)
+        if (
+            self.prev_view.space_pressed
+            and not self.fighter.is_dead
+            and self.player.can_attack(sprite_pos(self.fighter))
         ):  # TODO FIXME This logic should be in player
             if self.player.is_attacking:
                 self.player.update_attack(delta_time)

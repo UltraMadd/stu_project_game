@@ -1,4 +1,5 @@
 uniform vec2 pos;
+uniform vec3 color;
 uniform float rot;
 uniform float radius;
 
@@ -16,10 +17,10 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
         + npos.y*(npos_second.x - fragCoord.x) 
         + npos_second.y*(fragCoord.x - npos.x)
     )/2.0;
-    float height = area * 2 / distance(npos, npos_second);
+    float height = area * 2 / distance(npos, npos_second) / 5;
     float dot1 = dot(fragCoord, npos);
     float dot2 = dot(fragCoord, npos_second);
     if (dot1 > 0 && dot2 > 0)
         opacity = 1/height;
-    fragColor = vec4(vec3(1.0), opacity);
+    fragColor = vec4(color, opacity);
 }
