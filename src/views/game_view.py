@@ -58,9 +58,15 @@ class GameView(arcade.View):
         self.player.center_x = 2000
         self.player.center_y = 2000
         self.attacks_list = arcade.SpriteList()
-
+        layer_options = {
+            "groundcollision1": {
+                "use_spatial_hash": True,
+                "hit_box_algorithm": "Detailed",
+                "hit_box_details": 20,
+            },
+        }
         self.tiled_map = arcade.load_tilemap(
-            abspath(join("map", "map1.tmx")), 1
+            abspath(join("map", "map1.json")), 1, layer_options
         )
         self.map_width = self.tiled_map.width * self.tiled_map.tile_width
         self.map_height = self.tiled_map.height * self.tiled_map.tile_height
@@ -112,7 +118,7 @@ class GameView(arcade.View):
             self.player,
             walls=[
                 self.scene["water"],
-                self.scene["groundcollision1"],
+                self.scene["groundcollision1"]
             ],
         )
 
@@ -257,7 +263,7 @@ class GameView(arcade.View):
 
     def update_enemies(self, delta_time):
         i = len(self.enemies) - 1
-        while i >= 0:  # TODO use "for"?
+        while i >= 0:  # TODO use "for"
             if self.enemies[i].dead:
                 self.player.gain_xp(self.enemies[i].kill_xp_reward)
                 self.enemies.pop(i)
