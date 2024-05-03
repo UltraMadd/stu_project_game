@@ -380,6 +380,7 @@ class GameView(arcade.View):
         self.right_pressed = False
         self.space_pressed = False
 
+
 class GameOverView(arcade.View):
 
     def __init__(self):
@@ -398,6 +399,7 @@ class GameOverView(arcade.View):
 
     def on_show_view(self):
         arcade.set_background_color(arcade.color.WHITE)
+
     def on_draw(self):
         self.clear()
         arcade.draw_text("Game Over", self.window.width / 2, self.window.height / 2 + 150, arcade.color.BLACK, font_size=50, anchor_x="center")
