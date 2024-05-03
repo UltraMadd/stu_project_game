@@ -320,9 +320,6 @@ class GameView(arcade.View):
         self.scene.draw()
         self.enemies.draw()
         self.draw_npc()
-        self.draw_gotos()
-        self.on_draw_universal()
-        self.draw_bars(draw_xp=True)
         for enemy in self.enemies:
             if is_point_in_rect(
                 enemy.center_x,
@@ -334,6 +331,9 @@ class GameView(arcade.View):
             ):
                 enemy.draw_hp_bar()
                 enemy.draw_effects()
+        self.draw_gotos()
+        self.on_draw_universal()
+        self.draw_bars(draw_xp=True)
 
         if CHECK_PERF:
             self._draw_fps()
@@ -463,7 +463,7 @@ class GameView(arcade.View):
         elif symbol == arcade.key.T:
             self.player.set_position(self.npc[0].center_x, self.npc[0].center_y)
         elif symbol == arcade.key.G:
-            boss = SecondBoss() # FirstBoss()
+            boss = FirstBoss()
             self.window.show_view(FightView(self, boss))
         elif symbol == arcade.key.E:
             self.window.show_view(UpgradeTreeView(self))

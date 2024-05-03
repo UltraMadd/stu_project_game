@@ -36,7 +36,7 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
         self.set_hit_box(self.texture.hit_box_points)
         self.is_attacking = False
         self.attacking_timer = 0
-        self.xp = 10000
+        self.xp = 1000000
         self.max_xp = 100
         self.points = 0
         self.heal_speed = 0
@@ -65,7 +65,7 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
     def update_stats(self):
         self.max_hitpoints = 100
         self.heal_speed = 0
-        self.attack_damage = 100000
+        self.attack_damage = 10
         self.attack_speed = 1
         damage_mult = 1
         for idf in self.acquired_upgrades_idf:
