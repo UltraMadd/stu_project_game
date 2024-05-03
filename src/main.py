@@ -1,5 +1,4 @@
 import arcade
-
 from views.game_view import GameView
 
 
@@ -15,6 +14,7 @@ class Game:
     def run(self):
         self.game_window.show_view(GameView())
         arcade.run()
+
 
 
 def main():
