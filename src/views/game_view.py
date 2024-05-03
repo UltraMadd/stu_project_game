@@ -6,7 +6,7 @@ import arcade
 import pyglet.math as gmath
 from pyglet.math import Vec2
 from entities.animated import DOWN, load_default_animated
-from entities.fighter import FirstBoss, SecondBoss
+from entities.fighter import FirstBoss
 
 from entities.player import Goto, Player
 from entities.enemy import Enemy
