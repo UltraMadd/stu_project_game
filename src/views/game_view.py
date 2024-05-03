@@ -3,6 +3,7 @@ from os.path import abspath, join
 from random import randint
 
 import arcade
+import arcade.gui
 import pyglet.math as gmath
 from pyglet.math import Vec2
 
@@ -55,6 +56,7 @@ class GameView(arcade.View):
         self.player_list = arcade.SpriteList()
         self.enemies = arcade.SpriteList()
         self.player = Player()
+
         self.player.center_x = 2000
         self.player.center_y = 2000
         self.attacks_list = arcade.SpriteList()
@@ -75,6 +77,7 @@ class GameView(arcade.View):
             ...  # print(attr, getattr(target, attr))
         self.scene = arcade.Scene.from_tilemap(self.tiled_map)
         self.camera = arcade.Camera(self.window.width, self.window.height)
+        self.scene.add_sprite_list("player", use_spatial_hash=True)
         self.scene.add_sprite("player", self.player)
         self.setup_animations()
         self.setup_physics()
@@ -255,6 +258,9 @@ class GameView(arcade.View):
         self.setup_animations()
         self.update_enemies(delta_time)
         self.player.update()
+        if self.player.hitpoints <= 0:
+            self.scene.remove_sprite_list_by_name("player")
+            self.window.show_view(GameOverView())
         try:
             if self.player.frames:
                 self.player_list.update_animation()
@@ -373,3 +379,35 @@ class GameView(arcade.View):
         self.left_pressed = False
         self.right_pressed = False
         self.space_pressed = False
+
+
+class GameOverView(arcade.View):
+
+    def __init__(self):
+        super().__init__()
+        self.manager = arcade.gui.UIManager()
+        self.manager.enable()
+        restart_button = RestartButton(text="Restart", width=200)
+        self.vertical_box = arcade.gui.UIBoxLayout()
+        self.vertical_box.add(restart_button.with_space_around(bottom=60))
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                anchor_x="center_x",
+                anchor_y="center_y",
+                child=self.vertical_box)
+        )
+
+    def on_show_view(self):
+        arcade.set_background_color(arcade.color.WHITE)
+
+    def on_draw(self):
+        self.clear()
+        arcade.draw_text("Game Over", self.window.width / 2, self.window.height / 2 + 150, arcade.color.BLACK, font_size=50, anchor_x="center")
+        self.manager.draw()
+
+
+class RestartButton(arcade.gui.UIFlatButton):
+    def on_click(self, event: arcade.gui.UIOnClickEvent):
+        game_view = GameView()
+        self.window = arcade.get_window()
+        self.window.show_view(game_view)
