@@ -655,6 +655,7 @@ class MainWindow(FadingView):
 
     def on_button_click(self, event):
         self.fade_out = 0
+        self.uimanager.disable()
 
     def on_draw(self):
         arcade.start_render()
