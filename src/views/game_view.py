@@ -5,12 +5,13 @@ from random import randint
 import arcade
 import arcade.gui
 import pyglet.math as gmath
+from arcade.experimental.shadertoy import Shadertoy
 from pyglet.math import Vec2
-from entities.animated import DOWN, load_default_animated
-from entities.fighter import FirstBoss
 
 from entities.player import Goto, Player
-from entities.enemy import Enemy
+from entities.animated import DOWN, load_default_animated
+from entities.fighter import FirstBoss
+from entities.enemy import Enemy, MIN_ENEMY_TP, MAX_ENEMY_TP
 from utils import get_color_from_gradient, mul_vec_const, is_point_in_rect, sprite_pos
 from views.dialog_view import INCOGNITO_START, DialogView, Incognito, Npc
 from views.fight_view import FightView
@@ -72,7 +73,7 @@ class GameView(arcade.View):
         self.player.center_y = 2000
         incognito = Incognito(
             player=self.player, default_direction=DOWN, center_x=1747, center_y=4500
-            )
+        )
         self.attacks_list = arcade.SpriteList()
         layer_options = {
             "groundcollision1": {
@@ -98,10 +99,16 @@ class GameView(arcade.View):
         self.setup_animations()
         self.setup_physics()
 
+        self.enemy_shadertoys = {}
+        self.enemy_shadertoys["glowing_ball"] = Shadertoy.create_from_file(
+            self.window.get_size(), "src/shader/glowing_ball.glsl"
+        )
+        self.enemy_shadertoys["shield"] = Shadertoy.create_from_file(
+            self.window.get_size(), "src/shader/shield.glsl"
+        )
+
         if CHECK_PERF:
             arcade.enable_timings()
-
-        self.enemies.append(Enemy(center_x=1500, center_y=1500))
 
     def load_player_animation_frames(self, all_frames: str):
         res = []
@@ -135,10 +142,7 @@ class GameView(arcade.View):
         self.player_list.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player,
-            walls=[
-                self.scene["water"],
-                self.scene["groundcollision1"]
-            ],
+            walls=[self.scene["water"], self.scene["groundcollision1"]],
         )
 
     def center_camera_to_player(self, restrict=False):
@@ -323,6 +327,7 @@ class GameView(arcade.View):
         self.scene.draw()
         self.enemies.draw()
         self.draw_npc()
+        self.on_draw_universal()
         for enemy in self.enemies:
             if is_point_in_rect(
                 enemy.center_x,
@@ -333,9 +338,8 @@ class GameView(arcade.View):
                 self.camera.viewport_height,
             ):
                 enemy.draw_hp_bar()
-                enemy.draw_effects()
+                enemy.draw_effects(self)
         self.draw_gotos()
-        self.on_draw_universal()
         self.draw_bars(draw_xp=True)
 
         if CHECK_PERF:
@@ -385,15 +389,21 @@ class GameView(arcade.View):
                 self.enemies.pop(i)
             i -= 1
 
+        enemies_cnt = 100 + len(self.player.acquired_upgrades_idf) * 10
         if (
-            len(self.enemies) < 100
+            len(self.enemies) < enemies_cnt
         ):  # TODO just for testing purposes here, replace later
-            for _ in range(100 - len(self.enemies)):
-                self.enemies.append(
-                    Enemy(center_x=randint(0, 2000), center_y=randint(0, 2000))
+            for _ in range(enemies_cnt - len(self.enemies)):
+                new_enemy = Enemy.from_tp(
+                    randint(MIN_ENEMY_TP, MAX_ENEMY_TP),
+                    shadertoys=self.enemy_shadertoys,
                 )
+                new_enemy.center_x = randint(0, self.map_width)
+                new_enemy.center_y = randint(0, self.map_height)
+                self.enemies.append(new_enemy)
 
         player_pos = sprite_pos(self.player)
+        self.enemy_shield_cnt = 0
         for enemy in self.enemies:
             enemy.update()
             camera_x, camera_y = self.camera.position
@@ -403,7 +413,7 @@ class GameView(arcade.View):
 
             if enemy.is_attacking:
                 enemy.update_attack(delta_time)
-            elif enemy2player_distance <= enemy.attack.attack_start_range:
+            elif not enemy.attack.no_attack and enemy2player_distance <= enemy.attack.attack_start_range:
                 enemy.start_attacking(self.player)
             elif is_point_in_rect(
                 enemy.center_x,
@@ -413,15 +423,17 @@ class GameView(arcade.View):
                 camera_w,
                 camera_h,
             ):
-                if not enemy.is_attacking:
+                if not enemy.is_attacking and enemy2player_distance > enemy.attack.attack_start_range:
                     enemy_x_delta, enemy_y_delta = (player_pos - enemy_pos).normalize()
                     enemy.center_x += enemy_x_delta * delta_time * enemy.speed
                     enemy.center_y += enemy_y_delta * delta_time * enemy.speed
+                if enemy.does_activate_shield:
+                    self.enemy_shield_cnt += 1
 
     def process_keychange(self, delta_time):
         self.player.direction = self.player.direction.normalize()
         self.player.change_x, self.player.change_y = mul_vec_const(
-            self.player.direction, self.player.speed
+            self.player.direction, self.player.speed * delta_time * 40
         )
 
         if self.up_pressed and not self.down_pressed:
@@ -446,7 +458,10 @@ class GameView(arcade.View):
                         self.player.update_attack(delta_time)
                     else:
                         self.player.start_attacking()
-                        enemy.damage(self.player.attack_damage)
+                        damage_coeff = 1
+                        if self.enemy_shield_cnt > 0:
+                            damage_coeff = 2 / (2 + self.enemy_shield_cnt)
+                        enemy.damage(self.player.attack_damage * damage_coeff)
 
     def on_key_press_universal(self, symbol: int, modifiers: int):
         if symbol == arcade.key.W:
@@ -510,9 +525,8 @@ class GameOverView(arcade.View):
         self.vertical_box.add(restart_button.with_space_around(bottom=60))
         self.manager.add(
             arcade.gui.UIAnchorWidget(
-                anchor_x="center_x",
-                anchor_y="center_y",
-                child=self.vertical_box)
+                anchor_x="center_x", anchor_y="center_y", child=self.vertical_box
+            )
         )
 
     def on_show_view(self):
@@ -520,7 +534,14 @@ class GameOverView(arcade.View):
 
     def on_draw(self):
         self.clear()
-        arcade.draw_text("Game Over", self.window.width / 2, self.window.height / 2 + 150, arcade.color.BLACK, font_size=50, anchor_x="center")
+        arcade.draw_text(
+            "Game Over",
+            self.window.width / 2,
+            self.window.height / 2 + 150,
+            arcade.color.BLACK,
+            font_size=50,
+            anchor_x="center",
+        )
         self.manager.draw()
 
 

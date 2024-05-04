@@ -21,13 +21,18 @@ class Goto:
     y: int
 
 
+DEF_MAX_HP = 100
+DEF_DAMAGE = 15
+DEF_HEAL = 5
+
+
 class Player(Entity, arcade.AnimatedTimeBasedSprite):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.scale = 1.5
         self.speed = 3
         self.attack_range = 100
-        self.attack_damage = 10
+        self.attack_damage = DEF_DAMAGE
         self.direction = Vec2(1, 1)
         self.texture = arcade.load_texture(
             abspath(join("textures", "player", "walkback1.png"))
@@ -37,9 +42,11 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
         self.is_attacking = False
         self.attacking_timer = 0
         self.xp = 1000000
+
         self.max_xp = 100
         self.points = 0
-        self.heal_speed = 0
+        self.heal_speed = DEF_HEAL
+        self.max_hitpoints = DEF_MAX_HP
         self.attack_speed = 1
         self.attack_time = 0.5
         self.acquired_upgrades_idf = set()
@@ -63,9 +70,9 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
             self.is_attacking = False
 
     def update_stats(self):
-        self.max_hitpoints = 100
-        self.heal_speed = 0
-        self.attack_damage = 10
+        self.max_hitpoints = DEF_MAX_HP
+        self.heal_speed = DEF_HEAL
+        self.attack_damage = DEF_DAMAGE
         self.attack_speed = 1
         damage_mult = 1
         for idf in self.acquired_upgrades_idf:

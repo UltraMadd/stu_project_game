@@ -106,8 +106,8 @@ class FightView(arcade.View):
         self.fighter.attack(self.player, delta_time)
 
     def move_player(self, delta_time: float):
-        self.player.center_x += self.player.change_x * delta_time * 60
-        self.player.center_y += self.player.change_y * delta_time * 60
+        self.player.center_x += self.player.change_x
+        self.player.center_y += self.player.change_y
 
     def on_update(self, delta_time: float):
         self.prev_view.update_universal(delta_time)

@@ -11,7 +11,6 @@ from entities.player import Player
 from utils import EPS, get_random_direction, mul_vec_const, triange_area_3p, sprite_pos
 
 
-
 def load_boss_textures(filepath, row, width=96, height=96):
     frames = []
     for col in range(3):
@@ -275,5 +274,3 @@ class FirstBoss(Fighter, arcade.AnimatedTimeBasedSprite):
             ball.speed += ball2center_dist * delta_time
 
             ball.pos += mul_vec_const(ball.dir, ball.speed * delta_time)
-
-
