@@ -16,7 +16,6 @@ class Game:
         arcade.run()
 
 
-
 def main():
     game_window = GameWindow(1600, 900, "the game")
     game = Game(game_window)

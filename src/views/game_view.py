@@ -5,11 +5,16 @@ from random import randint
 import arcade
 import arcade.gui
 import pyglet.math as gmath
+from arcade.experimental.shadertoy import Shadertoy
 from pyglet.math import Vec2
 
-from entities.player import Player
-from entities.enemy import Enemy
+from entities.player import Goto, Player
+from entities.animated import DOWN, load_default_animated
+from entities.fighter import FirstBoss
+from entities.enemy import Enemy, MIN_ENEMY_TP, MAX_ENEMY_TP
 from utils import get_color_from_gradient, mul_vec_const, is_point_in_rect, sprite_pos
+from views.dialog_view import INCOGNITO_START, DialogView, Incognito, Npc
+from views.fight_view import FightView
 from views.upgrade_tree import UpgradeTreeView
 
 
@@ -30,6 +35,9 @@ HP_BAR_HEALTH_GRADIENT = [
     arcade.color.PASTEL_GREEN,
 ]
 CHECK_PERF = False
+NPC_TRIGGER_DISTANCE = 100
+NPC2ICON_DISTANCE = 20
+TIP_MARGIN = 5
 
 
 class GameView(arcade.View):
@@ -44,21 +52,28 @@ class GameView(arcade.View):
         self.left_pressed = False
         self.right_pressed = False
         self.space_pressed = False
+        self.f_pressed = False
         self.physics_engine = None
         self.tiled_map = None
         self.physics_engine = None
         self.camera = None
         self.scene = None
-        self.attacks_list = None
         self.has_been_setup = False
+        self.npc = None
+        self.is_fighting = False
 
     def setup(self):
         self.player_list = arcade.SpriteList()
         self.enemies = arcade.SpriteList()
+        self.npc = arcade.SpriteList()
+
         self.player = Player()
 
         self.player.center_x = 2000
         self.player.center_y = 2000
+        incognito = Incognito(
+            player=self.player, default_direction=DOWN, center_x=1747, center_y=4500
+        )
         self.attacks_list = arcade.SpriteList()
         layer_options = {
             "groundcollision1": {
@@ -70,6 +85,8 @@ class GameView(arcade.View):
         self.tiled_map = arcade.load_tilemap(
             abspath(join("map", "map1.json")), 1, layer_options
         )
+        self.npc.append(incognito)
+
         self.map_width = self.tiled_map.width * self.tiled_map.tile_width
         self.map_height = self.tiled_map.height * self.tiled_map.tile_height
         target = self.tiled_map
@@ -82,10 +99,16 @@ class GameView(arcade.View):
         self.setup_animations()
         self.setup_physics()
 
+        self.enemy_shadertoys = {}
+        self.enemy_shadertoys["glowing_ball"] = Shadertoy.create_from_file(
+            self.window.get_size(), "src/shader/glowing_ball.glsl"
+        )
+        self.enemy_shadertoys["shield"] = Shadertoy.create_from_file(
+            self.window.get_size(), "src/shader/shield.glsl"
+        )
+
         if CHECK_PERF:
             arcade.enable_timings()
-
-        self.enemies.append(Enemy(center_x=1500, center_y=1500))
 
     def load_player_animation_frames(self, all_frames: str):
         res = []
@@ -119,32 +142,30 @@ class GameView(arcade.View):
         self.player_list.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player,
-            walls=[
-                self.scene["water"],
-                self.scene["groundcollision1"]
-            ],
+            walls=[self.scene["water"], self.scene["groundcollision1"]],
         )
 
-    def center_camera_to_player(self):
+    def center_camera_to_player(self, restrict=False):
         scr_center_x = self.player.center_x - self.camera.viewport_width / 2
         scr_center_y = self.player.center_y - self.camera.viewport_height / 2
 
-        scr_center_x = max(
-            min(scr_center_x, self.map_width - self.camera.viewport_width), 0
-        )
-        scr_center_y = max(
-            min(scr_center_y, self.map_height - self.camera.viewport_height), 0
-        )
+        if restrict:
+            scr_center_x = max(
+                min(scr_center_x, self.map_width - self.camera.viewport_width), 0
+            )
+            scr_center_y = max(
+                min(scr_center_y, self.map_height - self.camera.viewport_height), 0
+            )
 
         player_centered = Vec2(scr_center_x, scr_center_y)
 
         self.camera.move_to(player_centered)
 
     def on_show_view(self):
+        self.is_fighting = False
         if not self.has_been_setup:
             self.setup()
             self.has_been_setup = True
-        arcade.set_background_color(arcade.color.TEA_GREEN)
         self.player.update_stats()
 
     def draw_bar(
@@ -184,40 +205,44 @@ class GameView(arcade.View):
             bold=True,
         )
 
-    def draw_bars(self):
+    def draw_bars(self, draw_hp=False, draw_xp=False):
         left_margin = HP_BAR_HEIGHT
 
         hp_bar_y = self.camera.position.y + HP_BAR_HEIGHT
 
-        self.draw_bar(
-            self.camera.position.x + HP_BAR_WIDTH // 2 + left_margin,
-            hp_bar_y,
-            HP_BAR_WIDTH,
-            HP_BAR_HEIGHT,
-            self.player.hitpoints,
-            self.player.max_hitpoints,
-            get_color_from_gradient(
-                HP_BAR_HEALTH_GRADIENT, self.player.hitpoints, self.player.max_hitpoints
-            ),
-            BARS_BACKGROUND_COLOR,
-            arcade.color.BLACK,
-            HP_BAR_TEXT_SIZE,
-        )
+        if draw_hp:
+            self.draw_bar(
+                self.camera.position.x + HP_BAR_WIDTH // 2 + left_margin,
+                hp_bar_y,
+                HP_BAR_WIDTH,
+                HP_BAR_HEIGHT,
+                self.player.hitpoints,
+                self.player.max_hitpoints,
+                get_color_from_gradient(
+                    HP_BAR_HEALTH_GRADIENT,
+                    self.player.hitpoints,
+                    self.player.max_hitpoints,
+                ),
+                BARS_BACKGROUND_COLOR,
+                arcade.color.BLACK,
+                HP_BAR_TEXT_SIZE,
+            )
 
-        xp_bar_y = hp_bar_y + XP_BAR_HEIGHT + HP_BAR_HEIGHT // 2
+        if draw_xp:
+            xp_bar_y = hp_bar_y + XP_BAR_HEIGHT + HP_BAR_HEIGHT // 2
 
-        self.draw_bar(
-            self.camera.position.x + XP_BAR_WIDTH // 2 + left_margin,
-            xp_bar_y,
-            XP_BAR_WIDTH,
-            XP_BAR_HEIGHT,
-            self.player.xp,
-            self.player.max_xp,
-            arcade.color.SAPPHIRE_BLUE,
-            BARS_BACKGROUND_COLOR,
-            arcade.color.BLACK,
-            XP_BAR_TEXT_SIZE,
-        )
+            self.draw_bar(
+                self.camera.position.x + XP_BAR_WIDTH // 2 + left_margin,
+                xp_bar_y,
+                XP_BAR_WIDTH,
+                XP_BAR_HEIGHT,
+                self.player.xp,
+                self.player.max_xp,
+                arcade.color.SAPPHIRE_BLUE,
+                BARS_BACKGROUND_COLOR,
+                arcade.color.BLACK,
+                XP_BAR_TEXT_SIZE,
+            )
 
     def _draw_fps(self):
         arcade.draw_text(
@@ -229,12 +254,80 @@ class GameView(arcade.View):
             bold=True,
         )
 
+    def draw_gotos(self):
+        dist2arrow = self.player.height * 2
+        for goto in self.player.gotos:
+            goto_pos = Vec2(goto.x, goto.y)
+            if is_point_in_rect(
+                goto_pos.x,
+                goto_pos.y,
+                self.camera.position.x,
+                self.camera.position.y,
+                self.camera.viewport_width,
+                self.camera.viewport_height,
+            ):
+                continue
+            player_pos = Vec2(self.player.center_x, self.player.center_y)
+            direction = (goto_pos - player_pos).normalize()
+            arrow_pos = player_pos + mul_vec_const(direction, dist2arrow)
+            texture = arcade.load_texture(
+                abspath(join("textures", "icons", "32x32", "gem_01a.png"))
+            )
+            arcade.draw_texture_rectangle(
+                center_x=arrow_pos.x,
+                center_y=arrow_pos.y,
+                width=texture.width,
+                height=texture.height,
+                texture=texture,
+            )
+
+    def draw_npc(self):
+        self.npc.draw()
+        player_pos = Vec2(self.player.center_x, self.player.center_y)
+        for npc in self.npc:
+            npc_icon = arcade.load_texture(
+                abspath(join("textures", "icons", "32x32", "gem_01a.png"))
+            )
+            arcade.draw_texture_rectangle(
+                center_x=npc.center_x,
+                center_y=npc.center_y + npc.height // 2 + NPC2ICON_DISTANCE,
+                width=npc_icon.width,
+                height=npc_icon.height,
+                texture=npc_icon,
+            )
+            if (
+                player_pos.distance(Vec2(npc.center_x, npc.center_y))
+                <= NPC_TRIGGER_DISTANCE
+            ):
+                tip_y = npc.center_y - npc.height // 2 - NPC2ICON_DISTANCE
+                press2talk_text = arcade.Text(
+                    "Press F to talk",
+                    npc.center_x,
+                    tip_y,
+                    anchor_x="center",
+                    anchor_y="center",
+                    color=arcade.color.BLACK,
+                )
+                arcade.draw_rectangle_filled(
+                    center_x=npc.center_x,
+                    center_y=tip_y - TIP_MARGIN // 2,
+                    width=press2talk_text.content_width + TIP_MARGIN,
+                    height=press2talk_text.content_height + TIP_MARGIN,
+                    color=arcade.color.WHITE_SMOKE,
+                )
+                press2talk_text.draw()
+
+    def on_draw_universal(self):
+        self.camera.use()
+        self.player_list.draw()
+        self.draw_bars(draw_hp=True)
+
     def on_draw(self):
         self.clear()
         self.scene.draw()
-        self.camera.use()
-        self.player_list.draw()
         self.enemies.draw()
+        self.draw_npc()
+        self.on_draw_universal()
         for enemy in self.enemies:
             if is_point_in_rect(
                 enemy.center_x,
@@ -245,18 +338,32 @@ class GameView(arcade.View):
                 self.camera.viewport_height,
             ):
                 enemy.draw_hp_bar()
-                enemy.draw_effects()
+                enemy.draw_effects(self)
+        self.draw_gotos()
+        self.draw_bars(draw_xp=True)
 
-        self.draw_bars()
         if CHECK_PERF:
             self._draw_fps()
 
-    def on_update(self, delta_time):
+    def update_npc(self, delta_time):
+        player_pos = Vec2(self.player.center_x, self.player.center_y)
+        for npc in self.npc:
+            npc.on_update(delta_time)
+
+            if (
+                self.f_pressed
+                and player_pos.distance(Vec2(npc.center_x, npc.center_y))
+                <= NPC_TRIGGER_DISTANCE
+            ):
+                self.release_all()
+                self.window.show_view(
+                    DialogView(self, INCOGNITO_START, chars={})
+                )  # TODO take dialog from npc and chars
+
+    def update_universal(self, delta_time):
         self.process_keychange(delta_time)
         self.center_camera_to_player()
-        self.physics_engine.update()
         self.setup_animations()
-        self.update_enemies(delta_time)
         self.player.update()
         if self.player.hitpoints <= 0:
             self.scene.remove_sprite_list_by_name("player")
@@ -267,6 +374,13 @@ class GameView(arcade.View):
         except IndexError as e:
             print(e, self.player.frames)
 
+    def on_update(self, delta_time):
+        self.update_enemies(delta_time)
+        self.update_npc(delta_time)
+        self.update_universal(delta_time)
+        self.center_camera_to_player(restrict=True)
+        self.physics_engine.update()
+
     def update_enemies(self, delta_time):
         i = len(self.enemies) - 1
         while i >= 0:  # TODO use "for"
@@ -275,16 +389,23 @@ class GameView(arcade.View):
                 self.enemies.pop(i)
             i -= 1
 
+        enemies_cnt = 100 + len(self.player.acquired_upgrades_idf) * 10
         if (
-            len(self.enemies) < 100
+            len(self.enemies) < enemies_cnt
         ):  # TODO just for testing purposes here, replace later
-            for _ in range(100 - len(self.enemies)):
-                self.enemies.append(
-                    Enemy(center_x=randint(0, 2000), center_y=randint(0, 2000))
+            for _ in range(enemies_cnt - len(self.enemies)):
+                new_enemy = Enemy.from_tp(
+                    randint(MIN_ENEMY_TP, MAX_ENEMY_TP),
+                    shadertoys=self.enemy_shadertoys,
                 )
+                new_enemy.center_x = randint(0, self.map_width)
+                new_enemy.center_y = randint(0, self.map_height)
+                self.enemies.append(new_enemy)
 
         player_pos = sprite_pos(self.player)
+        self.enemy_shield_cnt = 0
         for enemy in self.enemies:
+            enemy.update()
             camera_x, camera_y = self.camera.position
             camera_w, camera_h = self.camera.viewport_width, self.camera.viewport_height
             enemy_pos = sprite_pos(enemy)
@@ -292,7 +413,7 @@ class GameView(arcade.View):
 
             if enemy.is_attacking:
                 enemy.update_attack(delta_time)
-            elif enemy2player_distance <= enemy.attack.attack_start_range:
+            elif not enemy.attack.no_attack and enemy2player_distance <= enemy.attack.attack_start_range:
                 enemy.start_attacking(self.player)
             elif is_point_in_rect(
                 enemy.center_x,
@@ -302,15 +423,17 @@ class GameView(arcade.View):
                 camera_w,
                 camera_h,
             ):
-                if not enemy.is_attacking:
+                if not enemy.is_attacking and enemy2player_distance > enemy.attack.attack_start_range:
                     enemy_x_delta, enemy_y_delta = (player_pos - enemy_pos).normalize()
                     enemy.center_x += enemy_x_delta * delta_time * enemy.speed
                     enemy.center_y += enemy_y_delta * delta_time * enemy.speed
+                if enemy.does_activate_shield:
+                    self.enemy_shield_cnt += 1
 
     def process_keychange(self, delta_time):
         self.player.direction = self.player.direction.normalize()
         self.player.change_x, self.player.change_y = mul_vec_const(
-            self.player.direction, self.player.speed
+            self.player.direction, self.player.speed * delta_time * 40
         )
 
         if self.up_pressed and not self.down_pressed:
@@ -328,24 +451,19 @@ class GameView(arcade.View):
             self.player.change_x = 0
 
         if self.space_pressed:
-            player_pos = sprite_pos(self.player)
             for enemy in self.enemies:
                 enemy_pos = sprite_pos(enemy)
-                attack_end_pos = player_pos + mul_vec_const(
-                    self.player.direction, self.player.attack_range
-                )
-                c = attack_end_pos.distance(enemy_pos)
-                a = attack_end_pos.distance(player_pos)
-                b = enemy_pos.distance(player_pos)
-                player_enemy_angle = math.acos((a**2 + b**2 - c**2) / (2 * a * b))
-                if player_enemy_angle < math.pi / 2 and b < self.player.attack_range:
+                if self.player.can_attack(enemy_pos):
                     if self.player.is_attacking:
                         self.player.update_attack(delta_time)
                     else:
                         self.player.start_attacking()
-                        enemy.damage(self.player.attack_damage)
+                        damage_coeff = 1
+                        if self.enemy_shield_cnt > 0:
+                            damage_coeff = 2 / (2 + self.enemy_shield_cnt)
+                        enemy.damage(self.player.attack_damage * damage_coeff)
 
-    def on_key_press(self, symbol: int, modifiers: int):
+    def on_key_press_universal(self, symbol: int, modifiers: int):
         if symbol == arcade.key.W:
             self.up_pressed = True
         elif symbol == arcade.key.S:
@@ -356,12 +474,22 @@ class GameView(arcade.View):
             self.right_pressed = True
         elif symbol == arcade.key.SPACE:
             self.space_pressed = True
-        elif symbol == arcade.key.E:
-            self.window.show_view(UpgradeTreeView(self))
+
+    def on_key_press(self, symbol: int, modifiers: int):
+        self.on_key_press_universal(symbol, modifiers)
+        if symbol == arcade.key.F:
+            self.f_pressed = True
         elif symbol == arcade.key.P:
             print(self.player.center_x, self.player.center_y)
+        elif symbol == arcade.key.T:
+            self.player.set_position(self.npc[0].center_x, self.npc[0].center_y)
+        elif symbol == arcade.key.G:
+            boss = FirstBoss()
+            self.window.show_view(FightView(self, boss))
+        elif symbol == arcade.key.E:
+            self.window.show_view(UpgradeTreeView(self))
 
-    def on_key_release(self, symbol: int, modifiers: int):
+    def on_key_release_universal(self, symbol: int, modifiers: int):
         if symbol == arcade.key.W:
             self.up_pressed = False
         elif symbol == arcade.key.S:
@@ -372,6 +500,11 @@ class GameView(arcade.View):
             self.right_pressed = False
         elif symbol == arcade.key.SPACE:
             self.space_pressed = False
+        elif symbol == arcade.key.F:
+            self.f_pressed = False
+
+    def on_key_release(self, symbol: int, modifiers: int):
+        self.on_key_release_universal(symbol, modifiers)
 
     def release_all(self):
         self.up_pressed = False
@@ -379,10 +512,10 @@ class GameView(arcade.View):
         self.left_pressed = False
         self.right_pressed = False
         self.space_pressed = False
+        self.f_pressed = False
 
 
 class GameOverView(arcade.View):
-
     def __init__(self):
         super().__init__()
         self.manager = arcade.gui.UIManager()
@@ -392,9 +525,8 @@ class GameOverView(arcade.View):
         self.vertical_box.add(restart_button.with_space_around(bottom=60))
         self.manager.add(
             arcade.gui.UIAnchorWidget(
-                anchor_x="center_x",
-                anchor_y="center_y",
-                child=self.vertical_box)
+                anchor_x="center_x", anchor_y="center_y", child=self.vertical_box
+            )
         )
 
     def on_show_view(self):
@@ -402,7 +534,14 @@ class GameOverView(arcade.View):
 
     def on_draw(self):
         self.clear()
-        arcade.draw_text("Game Over", self.window.width / 2, self.window.height / 2 + 150, arcade.color.BLACK, font_size=50, anchor_x="center")
+        arcade.draw_text(
+            "Game Over",
+            self.window.width / 2,
+            self.window.height / 2 + 150,
+            arcade.color.BLACK,
+            font_size=50,
+            anchor_x="center",
+        )
         self.manager.draw()
 
 
