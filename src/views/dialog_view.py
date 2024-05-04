@@ -1,9 +1,9 @@
 from __future__ import annotations
-from abc import abstractproperty
 
 from dataclasses import dataclass
+from abc import abstractproperty
 from os.path import abspath, join
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import arcade
 
@@ -47,6 +47,7 @@ class Incognito(Npc):
 @dataclass
 class Tell:
     text: str
+    display_image: Optional[str] = None
 
 
 @dataclass
@@ -66,47 +67,46 @@ class Dialog:
 
 INCOGNITO_START = Dialog(
     (
+        ("Оболтус", Tell("Ого! Вы сейчас в игре, а это презентация по этой же игре.")),
         (
-            "Incognito",
+            "Оболтус",
             Tell(
-                "You must first prove yourself by defeating four powerful creatures, each one representing a different aspect of this world's power"
+                "Это же такой необычный ход, сделать презентацию по игре в ней же? Right? Right?"
             ),
         ),
-        ("You", Tell("What do you mean? I don't understand")),
         (
-            "Incognito",
+            "Оболтус",
             Tell(
-                "You will soon enough. But for now, let me tell you about the atmosphere here. It's like... it's hard to explain. The air is thick with an otherworldly energy. Every step feels like a struggle against the forces of nature"
+                "Вы представляете, у нас настолько кастомизабильные диалоги, что в них можно делать презентации"
             ),
         ),
-        ("You", Tell("That sounds ominous")),
         (
-            "Incognito",
+            "",
             Tell(
-                "Ah, yes. You'll soon see what I mean. But for now, you must focus on your task at hand. Defeat those four bosses and then we can discuss... other matters"
+                "И вставлять комиксы с xkcd...\nСледующий слайд, пожалуйста",
+                display_image=abspath(join("textures", "comics.png")),
             ),
         ),
-        ("You", Tell("What tasks? Where am I")),
         (
-            "Incognito",
+            "Оболтус",
             Tell(
-                "Patience, my friend. All will be revealed in time. For now, let's just say that this world is full of mysteries waiting to be unraveled. And you're the one who'll do it"
+                "А в чем смысл диалогов, если у игры нет смысла? (*Рассказать про смысл игры*, да, вы это видите, где же мне еще оставлять заметки)"
             ),
         ),
-        ("Player", Tell("But why? Why did you choose me for this task")),
         (
-            "Incognito",
+            "Оболтус",
             Tell(
-                "Because I saw something in you... Something that makes me believe you have what it takes to unlock the secrets of this world"
+                "Вот на все это у нас ушло 3 недели (На самом деле мы все сделали за три дня. *Рассказать про организацию процесса разработки*)"
             ),
         ),
-        ("Player", Tell("What are those secrets?")),
-        ("Incognito", Tell("Ah, my friend. You'll soon see")),
+        ("Оболтус", Tell("Кто за что отвечал?")),
+        ("Оболтус", Tell("Что у нас получилось в итоге?")),
     )
 )
 
 
 DIALOG_TEXT_MARGIN = 10
+DIALOG_FONT_SIZE = 40
 
 
 class DialogView(arcade.View):
@@ -122,7 +122,7 @@ class DialogView(arcade.View):
         self.clear()
         self.prev_view.on_draw()
         self.camera.use()
-        dialog_height = min(self.camera.viewport_height // 4, 300)
+        dialog_height = min(self.camera.viewport_height // 3, 400)
         arcade.draw_rectangle_filled(
             self.camera.position.x + self.camera.viewport_width // 2,
             self.camera.position.y + dialog_height // 2,
@@ -132,6 +132,21 @@ class DialogView(arcade.View):
         )
         character, action = self.dialog.actions[self.cur_action]
         if isinstance(action, Tell):
+            if action.display_image is not None:
+                image_texture = arcade.load_texture(action.display_image)
+                arcade.draw_texture_rectangle(
+                    self.camera.position.x
+                    + self.camera.viewport_width
+                    - 10
+                    - image_texture.width // 2,
+                    self.camera.position.y
+                    + self.camera.viewport_height
+                    - image_texture.height // 2
+                    - 10,
+                    image_texture.width,
+                    image_texture.height,
+                    image_texture,
+                )
             text = action.text
         else:
             text = action.question
@@ -141,6 +156,7 @@ class DialogView(arcade.View):
             self.camera.position.x + DIALOG_TEXT_MARGIN,
             self.camera.position.y + dialog_height - DIALOG_TEXT_MARGIN,
             color=arcade.color.BLACK,
+            font_size=DIALOG_FONT_SIZE,
             anchor_y="top",
             multiline=True,
             width=self.camera.viewport_width - DIALOG_TEXT_MARGIN * 2,

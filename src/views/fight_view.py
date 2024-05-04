@@ -68,7 +68,7 @@ class FightView(arcade.View):
             self.camera.position.y + self.camera.viewport_height - BOSSBAR2TOP_MARGIN,
             BOSSBAR_WIDTH,
             BOSSBAR_HEIGHT,
-            self.fighter.hitpoints,
+            int(self.fighter.hitpoints),
             self.fighter.max_hitpoints,
             arcade.color.PURPLE,
             arcade.color.RICH_BLACK,

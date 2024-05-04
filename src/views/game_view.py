@@ -61,6 +61,7 @@ class GameView(arcade.View):
         self.has_been_setup = False
         self.npc = None
         self.is_fighting = False
+        self.freeze_enemies = False
 
     def setup(self):
         self.player_list = arcade.SpriteList()
@@ -375,7 +376,8 @@ class GameView(arcade.View):
             print(e, self.player.frames)
 
     def on_update(self, delta_time):
-        self.update_enemies(delta_time)
+        if not self.freeze_enemies:
+            self.update_enemies(delta_time)
         self.update_npc(delta_time)
         self.update_universal(delta_time)
         self.center_camera_to_player(restrict=True)
@@ -413,7 +415,10 @@ class GameView(arcade.View):
 
             if enemy.is_attacking:
                 enemy.update_attack(delta_time)
-            elif not enemy.attack.no_attack and enemy2player_distance <= enemy.attack.attack_start_range:
+            elif (
+                not enemy.attack.no_attack
+                and enemy2player_distance <= enemy.attack.attack_start_range
+            ):
                 enemy.start_attacking(self.player)
             elif is_point_in_rect(
                 enemy.center_x,
@@ -423,7 +428,10 @@ class GameView(arcade.View):
                 camera_w,
                 camera_h,
             ):
-                if not enemy.is_attacking and enemy2player_distance > enemy.attack.attack_start_range:
+                if (
+                    not enemy.is_attacking
+                    and enemy2player_distance > enemy.attack.attack_start_range
+                ):
                     enemy_x_delta, enemy_y_delta = (player_pos - enemy_pos).normalize()
                     enemy.center_x += enemy_x_delta * delta_time * enemy.speed
                     enemy.center_y += enemy_y_delta * delta_time * enemy.speed
@@ -488,6 +496,8 @@ class GameView(arcade.View):
             self.window.show_view(FightView(self, boss))
         elif symbol == arcade.key.E:
             self.window.show_view(UpgradeTreeView(self))
+        elif symbol == arcade.key.N:
+            self.freeze_enemies = not self.freeze_enemies
 
     def on_key_release_universal(self, symbol: int, modifiers: int):
         if symbol == arcade.key.W:
