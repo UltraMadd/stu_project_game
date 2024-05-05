@@ -498,6 +498,8 @@ class GameView(arcade.View):
             self.window.show_view(UpgradeTreeView(self))
         elif symbol == arcade.key.N:
             self.freeze_enemies = not self.freeze_enemies
+        elif symbol == arcade.key.M:
+            self.player.gain_xp(1000000)
 
     def on_key_release_universal(self, symbol: int, modifiers: int):
         if symbol == arcade.key.W:
