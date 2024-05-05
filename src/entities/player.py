@@ -22,7 +22,7 @@ class Goto:
 
 
 DEF_MAX_HP = 100
-DEF_DAMAGE = 15
+DEF_DAMAGE = 150000
 DEF_HEAL = 5
 
 
