@@ -41,7 +41,7 @@ class Player(Entity, arcade.AnimatedTimeBasedSprite):
         self.set_hit_box(self.texture.hit_box_points)
         self.is_attacking = False
         self.attacking_timer = 0
-        self.xp = 1000000
+        self.xp = 0
 
         self.max_xp = 100
         self.points = 0

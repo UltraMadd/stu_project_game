@@ -39,6 +39,7 @@ class Fighter:
         self.hitpoints -= amount
         if self.hitpoints < 0:
             self.is_dead = True
+            self.hitpoints = 0
 
     def attack(self, player: Player, delta_time: float):
         raise NotImplementedError()

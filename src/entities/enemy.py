@@ -24,8 +24,9 @@ HP_BAR_HEALTH_GRADIENT = [
     arcade.color.PASTEL_GREEN,
 ]
 
+
 def sigmoid(x):
-    return 1/(1 + math.exp(-x))
+    return 1 / (1 + math.exp(-x))
 
 
 class EnemyAttack:
@@ -41,7 +42,7 @@ class EnemyAttack:
     @classmethod
     def simple(cls):
         return cls(128)
-    
+
     @classmethod
     def no_attack(cls, attack_range=128):
         return cls(no_attack=True, attack_range=attack_range)
@@ -83,7 +84,7 @@ class Enemy(Entity, AnimatedSprite):
         self.kill_xp_reward = kill_xp_reward
         self.tp = tp
         self.does_activate_shield = False
-        self.shield_shadertoy = shadertoys['shield']
+        self.shield_shadertoy = shadertoys["shield"]
         if self.tp == 2:
             self.glowing_ball_shadertoy = shadertoys["glowing_ball"]
         elif self.tp == 4:
@@ -146,7 +147,6 @@ class Enemy(Entity, AnimatedSprite):
                 **kwargs,
             )
 
-
     def update(self):
         self.update_animation()
 
@@ -206,12 +206,16 @@ class Enemy(Entity, AnimatedSprite):
             self.glowing_ball_shadertoy.render()
 
     def draw_shield(self, parent_view):
-        self.shield_shadertoy.program["pos"] = sprite_pos(self) - parent_view.camera.position
-        self.shield_shadertoy.program["color"] = arcade.get_three_float_color(arcade.color.LIGHT_BLUE)
+        self.shield_shadertoy.program["pos"] = (
+            sprite_pos(self) - parent_view.camera.position
+        )
+        self.shield_shadertoy.program["color"] = arcade.get_three_float_color(
+            arcade.color.LIGHT_BLUE
+        )
         self.shield_shadertoy.program["radius"] = self.height * 3 / 4
         self.shield_shadertoy.render()
 
-    # !!!!!! TRASH CODE ALERT !!!!!! 
+    # !!!!!! TRASH CODE ALERT !!!!!!
     def draw_effects(self, parent_view):
         self.draw_attack(parent_view)
         if self.tp == 4:
