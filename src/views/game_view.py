@@ -527,6 +527,152 @@ class GameView(arcade.View):
         self.f_pressed = False
 
 
+class FadingView(arcade.View):
+    def __init__(self):
+        super().__init__()
+        self.fade_out = None
+        self.fade_in = 255
+
+    def update_fade(self, next_view=None):
+        if self.fade_out is not None:
+            self.fade_out += FADE_RATE
+            if self.fade_out is not None and self.fade_out > 255 and next_view is not None:
+                game_view = next_view()
+                self.window.show_view(game_view)
+
+        if self.fade_in is not None:
+            self.fade_in -= FADE_RATE
+            if self.fade_in <= 0:
+                self.fade_in = None
+
+    def draw_fading(self):
+        if self.fade_out is not None:
+            arcade.draw_rectangle_filled(self.window.width / 2, self.window.height / 2,
+                                         self.window.width, self.window.height,
+                                         (0, 0, 0, self.fade_out))
+
+        if self.fade_in is not None:
+            arcade.draw_rectangle_filled(self.window.width / 2, self.window.height / 2,
+                                         self.window.width, self.window.height,
+                                         (0, 0, 0, self.fade_in))
+
+
+class Dead_window(FadingView):
+    def __init__(self):
+        super().__init__()
+
+        self.w = MainWindow
+
+        self.manager = UIManager()
+        self.manager.enable()
+
+        self.uimanager = arcade.gui.UIManager()
+        self.uimanager.enable()
+
+    def on_update(self, dt):
+        self.update_fade(next_view=self.w)
+
+    def on_show_view(self):
+        arcade.set_background_color(arcade.color.TEA_GREEN)
+        resp = arcade.gui.UIFlatButton(width=300,
+                                height=75,
+                                text='Respawn')
+        t_m_m = arcade.gui.UIFlatButton(width=300,
+                                height=75,
+                                text='To main menu')
+        self.uimanager.add(
+            arcade.gui.UIAnchorWidget(
+                align_y=100,
+                child=resp
+            )
+        )
+        self.uimanager.add(
+            arcade.gui.UIAnchorWidget(
+                align_y=-100,
+                child=t_m_m
+            )
+        )
+
+        resp.on_click = self.Respawn
+
+        t_m_m.on_click = self.t_m_main
+
+    def Respawn(self, event):
+        self.w = GameView
+        self.fade_out = 0
+
+    def t_m_main(self, event):
+        self.fade_out = 0
+
+    def setup(self):
+        pass
+
+    def on_draw(self):
+        arcade.start_render()
+        self.uimanager.draw()
+        self.manager.draw()
+
+FADE_RATE = 100
+START_BUTTON_WIDTH = 300
+SETTINGS_BUTTON_WIDTH = 300
+EXIT_BUTTON_WIDTH = 300
+
+class MainWindow(FadingView):
+    def __init__(self):
+        super().__init__()
+        self.uimanager = arcade.gui.UIManager()
+        self.uimanager.enable()
+        self.w = GameView
+
+    def exit(self, event):
+        arcade.exit()
+
+    def setup(self):
+        pass
+
+    def on_update(self, dt):
+        self.update_fade(next_view=self.w)
+
+    def on_show_view(self):
+        arcade.set_background_color(arcade.color.TEA_GREEN)
+        start_button = arcade.gui.UIFlatButton(text="Start Game",
+                                               width=START_BUTTON_WIDTH,
+                                               height=75
+                                               )
+        settings_button = arcade.gui.UIFlatButton(text="Settings",
+                                                  width=SETTINGS_BUTTON_WIDTH,
+                                                  height=75
+                                                  )
+        exit_button = arcade.gui.UIFlatButton(text="Exit",
+                                              width=EXIT_BUTTON_WIDTH,
+                                              height=75
+                                              )
+
+        self.uimanager.add(
+            arcade.gui.UIAnchorWidget(
+                align_x=-self.window.width / 2 + START_BUTTON_WIDTH // 2 + 20,
+                anchor_y="center_y",
+                child=start_button)
+        )
+        self.uimanager.add(
+            arcade.gui.UIAnchorWidget(
+                align_x=-self.window.width / 2 + EXIT_BUTTON_WIDTH // 2 + 20,
+                align_y=-100,
+                child=exit_button)
+        )
+
+        start_button.on_click = self.on_button_click
+
+        exit_button.on_click = self.exit
+
+    def on_button_click(self, event):
+        self.fade_out = 0
+
+    def on_draw(self):
+        arcade.start_render()
+        self.uimanager.draw()
+
+
 class GameOverView(arcade.View):
     def __init__(self):
         super().__init__()
