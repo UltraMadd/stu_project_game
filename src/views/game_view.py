@@ -1,6 +1,7 @@
 import math
-from os.path import abspath, join
+from os.path import abspath, join, exists
 from random import randint
+import json
 
 import arcade
 import arcade.gui
@@ -69,6 +70,9 @@ class GameView(arcade.View):
         self.npc = arcade.SpriteList()
 
         self.player = Player()
+        if exists('save.json'):
+            with open('save.json') as save_file:
+                self.player.acquired_upgrades_idf = set(json.loads(save_file.read()))
 
         self.player.center_x = 2000
         self.player.center_y = 2000
@@ -93,6 +97,7 @@ class GameView(arcade.View):
         self.scene = arcade.Scene.from_tilemap(self.tiled_map)
         self.camera = arcade.Camera(self.window.width, self.window.height)
         self.scene.add_sprite_list("player", use_spatial_hash=True)
+
         self.scene.add_sprite("player", self.player)
         self.setup_animations()
         self.setup_physics()
@@ -107,6 +112,14 @@ class GameView(arcade.View):
 
         if CHECK_PERF:
             arcade.enable_timings()
+
+    def on_hide_view(self):
+        save = list(self.player.acquired_upgrades_idf)
+        print("saved")
+        with open("save.json", "w") as save_f:
+            save_str = json.dumps(save)
+            save_f.write(save_str)
+
 
     def load_player_animation_frames(self, all_frames: str):
         res = []
@@ -155,6 +168,7 @@ class GameView(arcade.View):
                 min(scr_center_y, self.map_height - self.camera.viewport_height), 0
             )
 
+
         player_centered = Vec2(scr_center_x, scr_center_y)
 
         self.camera.move_to(player_centered)
@@ -164,6 +178,8 @@ class GameView(arcade.View):
         if not self.has_been_setup:
             self.setup()
             self.has_been_setup = True
+        else:
+            self.on_hide_view()
         self.player.update_stats()
 
     def draw_bar(
