@@ -90,9 +90,6 @@ class GameView(arcade.View):
 
         self.map_width = self.tiled_map.width * self.tiled_map.tile_width
         self.map_height = self.tiled_map.height * self.tiled_map.tile_height
-        target = self.tiled_map
-        for attr in dir(target):
-            ...  # print(attr, getattr(target, attr))
         self.scene = arcade.Scene.from_tilemap(self.tiled_map)
         self.camera = arcade.Camera(self.window.width, self.window.height)
         self.scene.add_sprite_list("player", use_spatial_hash=True)
